@@ -11,7 +11,12 @@ public class TestSpring {
     //MusicPlayer musicPlayer = new MusicPlayer(music);
 
         MusicPlayer musicPlayer = contex.getBean("musicPlayer", MusicPlayer.class);
-        musicPlayer.PlayMusic();
+        //musicPlayer.PlayMusic();
+
+        musicPlayer.playMusic();
+
+        System.out.println(musicPlayer.getName());
+        System.out.println(musicPlayer.getVolume());
 
         contex.close();
     }
