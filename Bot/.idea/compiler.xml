@@ -9,6 +9,7 @@
         <outputRelativeToContentRoot value="true" />
         <module name="common-rabbitmq" />
         <module name="dispatcher" />
+        <module name="node" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
