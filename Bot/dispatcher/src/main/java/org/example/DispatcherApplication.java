@@ -5,8 +5,8 @@ import org.example.configuration.BotInitialization;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-public class Main {
-    /*
+public class DispatcherApplication {
+
     public static void main(String[] args) throws TelegramApiException {
         // Инициализация контекста
         AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(BotConfiguration.class);
@@ -22,5 +22,5 @@ public class Main {
         // Инициализация бота
         context.getBean(BotInitialization.class).init();
     }
-    */
+
 }
