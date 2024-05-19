@@ -3373,3 +3373,27 @@
 2024-05-19 15:06:17 INFO  UpdateProducerImpl:20 - hello!
 2024-05-19 15:06:17 INFO  CachingConnectionFactory:682 - Attempting to connect to: localhost:5672
 2024-05-19 15:06:17 INFO  CachingConnectionFactory:608 - Created new connection: connectionFactory#7e1a1da6:0/SimpleConnection@45730364 [delegate=amqp://userok@127.0.0.1:5672/, localPort=62578]
+2024-05-19 15:29:28 INFO  UpdateProducerImpl:20 - привет
+2024-05-19 15:29:35 INFO  UpdateProducerImpl:20 - привет
+2024-05-19 15:29:37 INFO  UpdateProducerImpl:20 - привет
+2024-05-19 15:29:39 INFO  UpdateProducerImpl:20 - привет
+2024-05-19 15:51:14 INFO  RabbitConfiguration:19 - Creating text_message_update queue
+2024-05-19 15:51:14 INFO  RabbitConfiguration:24 - Creating text_message_update queue
+2024-05-19 15:51:14 INFO  RabbitConfiguration:29 - Creating text_message_update queue
+2024-05-19 15:51:14 INFO  RabbitConfiguration:34 - Creating text_message_update queue
+2024-05-19 15:52:30 INFO  RabbitConfiguration:23 - Creating text_message_update queue
+2024-05-19 15:52:30 INFO  RabbitConfiguration:28 - Creating doc_message_update queue
+2024-05-19 15:52:30 INFO  RabbitConfiguration:33 - Creating photo_message_update queue
+2024-05-19 16:27:08 INFO  UpdateProducerImpl:20 - Хей
+2024-05-19 16:27:08 INFO  CachingConnectionFactory:682 - Attempting to connect to: localhost:5672
+2024-05-19 16:27:08 INFO  CachingConnectionFactory:608 - Created new connection: connectionFactory#7e1a1da6:0/SimpleConnection@2457dbad [delegate=amqp://userok@127.0.0.1:5672/, localPort=64495]
+2024-05-19 16:27:22 INFO  UpdateProducerImpl:20 - Поивет
+2024-05-19 16:27:29 INFO  UpdateProducerImpl:20 - null
+2024-05-19 16:50:41 INFO  RabbitConfiguration:23 - Creating text_message_update queue
+2024-05-19 16:50:41 INFO  RabbitConfiguration:28 - Creating doc_message_update queue
+2024-05-19 16:50:41 INFO  RabbitConfiguration:33 - Creating photo_message_update queue
+2024-05-19 16:51:02 INFO  UpdateProducerImpl:20 - hi
+2024-05-19 16:51:02 INFO  CachingConnectionFactory:682 - Attempting to connect to: localhost:5672
+2024-05-19 16:51:02 INFO  CachingConnectionFactory:608 - Created new connection: connectionFactory#1b28f282:0/SimpleConnection@735d2fa5 [delegate=amqp://userok@127.0.0.1:5672/, localPort=64911]
+2024-05-19 16:51:11 INFO  UpdateProducerImpl:20 - null
+2024-05-19 16:51:15 INFO  UpdateProducerImpl:20 - null
