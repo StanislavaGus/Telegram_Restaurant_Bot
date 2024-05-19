@@ -15,6 +15,7 @@ public class BotConfiguration {
     @Value("${botConfig.token}")
     private String token;
 
+
     @Value("${botConfig.url}")
     private String url;
     public String getName() {
