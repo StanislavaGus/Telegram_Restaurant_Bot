@@ -1,7 +1,9 @@
 package org.node;
 
+import org.node.configuration.DatabaseConfig;
 import org.node.configuration.RabbitMQConfig;
 import org.node.configuration.RabbitConfiguration;
+import org.node.configuration.ReactiveDatabaseConfig;
 import org.node.configuration.TomcatConfig;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
@@ -11,10 +13,12 @@ public class NodeApplication {
         AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(
                 RabbitMQConfig.class,
                 RabbitConfiguration.class,
-                TomcatConfig.class
+                TomcatConfig.class,
+                DatabaseConfig.class,
+                ReactiveDatabaseConfig.class
         );
 
-        // Убедитесь, что сервер Tomcat запускается
+        // Убедиться, что сервер Tomcat запускается
         context.getBean(TomcatConfig.class);
     }
 }

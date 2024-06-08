@@ -24,7 +24,7 @@ public class ConsumeServiceImpl implements ConsumerService {
     public void consumeTextMessageUpdates(Update update) {
         log.info("NODE: Text message is received");
 
-        var message =update.getMessage();
+        var message = update.getMessage();
         var sendMessage = new SendMessage();
         sendMessage.setChatId(message.getChatId().toString());
         sendMessage.setText("Hello from NODE!");

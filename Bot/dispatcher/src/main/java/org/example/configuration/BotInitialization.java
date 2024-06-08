@@ -32,17 +32,6 @@ public class BotInitialization {
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
-        /*
-        Bot bot = context.getBean(Bot.class);
-        TelegramBotsApi telegramBotsApi = new TelegramBotsApi(DefaultBotSession.class);
 
-        try {
-            SetWebhook setWebhook = new SetWebhook();
-            setWebhook.setUrl(bot.getBotPath());
-            System.out.println(bot.getBotPath()+"1");
-            telegramBotsApi.registerBot(bot, setWebhook);
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }*/
     }
 }

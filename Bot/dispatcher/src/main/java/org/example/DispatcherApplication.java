@@ -15,9 +15,9 @@ public class DispatcherApplication {
         //String[] beanNames = context.getBeanDefinitionNames();
 
         //for (String beanName : beanNames) {
-          //  Object bean = context.getBean(beanName);
-            //System.out.println("Bean name:"+ beanName+" Bean content:"+bean);
-      //  }
+        //  Object bean = context.getBean(beanName);
+        //System.out.println("Bean name:"+ beanName+" Bean content:"+bean);
+        //  }
 
         // Инициализация бота
         context.getBean(BotInitialization.class).init();

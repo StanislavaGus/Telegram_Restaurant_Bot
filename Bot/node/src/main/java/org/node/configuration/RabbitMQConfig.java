@@ -13,6 +13,7 @@ import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -34,7 +35,8 @@ public class RabbitMQConfig {
     private String password;
 
     @Bean
-    public ConnectionFactory connectionFactory() {
+    @Qualifier("rabbitConnectionFactory")
+    public ConnectionFactory rabbitConnectionFactory() {
         CachingConnectionFactory connectionFactory = new CachingConnectionFactory(host, port);
         connectionFactory.setUsername(username);
         connectionFactory.setPassword(password);
@@ -42,7 +44,7 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
+    public RabbitTemplate rabbitTemplate(@Qualifier("rabbitConnectionFactory") ConnectionFactory connectionFactory) {
         RabbitTemplate template = new RabbitTemplate(connectionFactory);
         template.setMessageConverter(jsonMessageConverter());
         return template;
@@ -60,7 +62,7 @@ public class RabbitMQConfig {
     }
 
     @Bean
-    public RabbitListenerContainerFactory<SimpleMessageListenerContainer> rabbitListenerContainerFactory(ConnectionFactory connectionFactory) {
+    public RabbitListenerContainerFactory<SimpleMessageListenerContainer> rabbitListenerContainerFactory(@Qualifier("rabbitConnectionFactory") ConnectionFactory connectionFactory) {
         SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
         factory.setConnectionFactory(connectionFactory);
         factory.setMessageConverter(jsonMessageConverter());
