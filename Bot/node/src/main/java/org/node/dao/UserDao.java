@@ -18,7 +18,7 @@ public class UserDao {
     }
 
     public Mono<Void> saveUser(String username, String password, String email) {
-        String sql = "INSERT INTO Users (username, password, email) VALUES (:username, :password, :email)";
+        String sql = "INSERT INTO users (username, password, email) VALUES (:username, :password, :email)";
         return r2dbcEntityTemplate.getDatabaseClient()
                 .sql(sql)
                 .bind("username", username)
@@ -27,8 +27,17 @@ public class UserDao {
                 .then();
     }
 
+    public Mono<String> findUserByUsername(String username) {
+        String sql = "SELECT password FROM users WHERE username = :username";
+        return r2dbcEntityTemplate.getDatabaseClient()
+                .sql(sql)
+                .bind("username", username)
+                .map(row -> row.get("password", String.class))
+                .one();
+    }
+
     public Flux<String> getAllUserNames() {
-        String sql = "SELECT username FROM Users";
+        String sql = "SELECT username FROM users";
         return r2dbcEntityTemplate.getDatabaseClient()
                 .sql(sql)
                 .map(row -> row.get("username", String.class))

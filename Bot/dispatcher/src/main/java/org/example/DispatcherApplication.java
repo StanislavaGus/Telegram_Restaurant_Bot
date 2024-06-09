@@ -1,26 +1,21 @@
 package org.example;
 
-import org.example.configuration.BotConfiguration;
 import org.example.configuration.BotInitialization;
+import org.example.configuration.DispatcherConfiguration;
+import org.node.configuration.NodeConfiguration;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 public class DispatcherApplication {
 
     public static void main(String[] args) throws TelegramApiException {
-        // Инициализация контекста
-        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(BotConfiguration.class);
-
-        // Вывод всех бинов
-        //String[] beanNames = context.getBeanDefinitionNames();
-
-        //for (String beanName : beanNames) {
-        //  Object bean = context.getBean(beanName);
-        //System.out.println("Bean name:"+ beanName+" Bean content:"+bean);
-        //  }
+        // Инициализация контекста с профилями dispatcher и node
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
+        context.getEnvironment().setActiveProfiles("dispatcher", "node");
+        context.register(DispatcherConfiguration.class, NodeConfiguration.class);
+        context.refresh();
 
         // Инициализация бота
         context.getBean(BotInitialization.class).init();
     }
-
 }

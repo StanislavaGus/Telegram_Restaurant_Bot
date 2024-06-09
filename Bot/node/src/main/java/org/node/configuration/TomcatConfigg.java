@@ -6,8 +6,8 @@ import org.springframework.context.annotation.*;
 
 @Configuration
 @ComponentScan(basePackages = {"org.node"})
-@PropertySource("classpath:app.properties")
-public class TomcatConfig {
+@PropertySource("classpath:appp.properties")
+public class TomcatConfigg {
 
     @Value("${server.port}")
     private int serverPort;

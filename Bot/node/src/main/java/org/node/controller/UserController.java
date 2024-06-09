@@ -2,10 +2,7 @@ package org.node.controller;
 
 import org.node.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -27,5 +24,10 @@ public class UserController {
     @GetMapping("/allUsers")
     public Flux<String> getAllUsers() {
         return userService.getAllUsers();
+    }
+
+    @PostMapping("/login")
+    public Mono<Boolean> login(@RequestParam String username, @RequestParam String password) {
+        return userService.authenticate(username, password);
     }
 }
