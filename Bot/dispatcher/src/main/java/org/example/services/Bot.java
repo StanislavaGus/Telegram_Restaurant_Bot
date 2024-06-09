@@ -3,6 +3,7 @@ package org.example.services;
 import lombok.extern.log4j.Log4j2;
 import org.example.configuration.BotConfiguration;
 import org.example.controller.UpdateController;
+import org.node.service.SessionService;
 import org.node.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -27,13 +28,15 @@ public class Bot extends TelegramLongPollingBot {
     private final AnnotationConfigApplicationContext context;
     private final UpdateController updateController;
     private final UserService userService;
+    private final SessionService sessionService;
 
     @Autowired
-    public Bot(BotConfiguration botConfig, AnnotationConfigApplicationContext context, UpdateController updateController, UserService userService) {
+    public Bot(BotConfiguration botConfig, AnnotationConfigApplicationContext context, UpdateController updateController, UserService userService, SessionService sessionService) {
         this.config = botConfig;
         this.context = context;
         this.updateController = updateController;
         this.userService = userService;
+        this.sessionService = sessionService;
     }
 
     @PostConstruct
@@ -63,6 +66,8 @@ public class Bot extends TelegramLongPollingBot {
                 handleRegisterCommand(chatId, messageText);
             } else if (messageText.startsWith("/login")) {
                 handleLoginCommand(chatId, messageText);
+            } else if (messageText.startsWith("/logout")) {
+                handleLogoutCommand(chatId);
             } else {
                 updateController.processUpdate(update);
             }
@@ -78,6 +83,7 @@ public class Bot extends TelegramLongPollingBot {
         KeyboardRow row = new KeyboardRow();
         row.add(new KeyboardButton("/register"));
         row.add(new KeyboardButton("/login"));
+        row.add(new KeyboardButton("/logout"));
         keyboard.add(row);
         keyboardMarkup.setKeyboard(keyboard);
         message.setReplyMarkup(keyboardMarkup);
@@ -104,6 +110,11 @@ public class Bot extends TelegramLongPollingBot {
     }
 
     private void handleLoginCommand(long chatId, String messageText) {
+        if (sessionService.isUserLoggedIn(chatId)) {
+            sendMessage(chatId, "You are already logged in!");
+            return;
+        }
+
         String[] parts = messageText.split(" ");
         if (parts.length == 3) {
             String username = parts[1];
@@ -112,6 +123,7 @@ public class Bot extends TelegramLongPollingBot {
             userService.authenticate(username, password)
                     .doOnSuccess(authenticated -> {
                         if (authenticated) {
+                            sessionService.logInUser(chatId);
                             sendMessage(chatId, "Login successful!");
                         } else {
                             sendMessage(chatId, "Login failed: Invalid credentials");
@@ -127,6 +139,15 @@ public class Bot extends TelegramLongPollingBot {
         }
     }
 
+    private void handleLogoutCommand(long chatId) {
+        if (!sessionService.isUserLoggedIn(chatId)) {
+            sendMessage(chatId, "You are not logged in.");
+            return;
+        }
+
+        sessionService.logOutUser(chatId);
+        sendMessage(chatId, "You have been logged out successfully.");
+    }
 
     private void sendMessage(long chatId, String text) {
         SendMessage message = new SendMessage();
