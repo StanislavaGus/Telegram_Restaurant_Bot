@@ -15,6 +15,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMar
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import reactor.core.publisher.Mono;
 
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
@@ -68,11 +69,97 @@ public class Bot extends TelegramLongPollingBot {
                 handleLoginCommand(chatId, messageText);
             } else if (messageText.startsWith("/logout")) {
                 handleLogoutCommand(chatId);
+            } else if (messageText.startsWith("/addpref")) {
+                handleAddPreferenceCommand(chatId, messageText);
+            } else if (messageText.startsWith("/viewprefs")) {
+                handleViewPreferencesCommand(chatId);
+            } else if (messageText.startsWith("/delpref")) {
+                handleDeletePreferenceCommand(chatId, messageText);
             } else {
                 updateController.processUpdate(update);
             }
         }
     }
+
+    private void handleAddPreferenceCommand(long chatId, String messageText) {
+        if (!sessionService.isUserLoggedIn(chatId)) {
+            sendMessage(chatId, "You are not logged in.");
+            return;
+        }
+
+        String[] parts = messageText.split(" ", 2);
+        if (parts.length == 2) {
+            String preference = parts[1];
+            Long userId = sessionService.getUserId(chatId);
+
+            userService.addUserPreference(userId, preference)
+                    .doOnSuccess(aVoid -> sendMessage(chatId, "Preference added successfully!"))
+                    .doOnError(throwable -> {
+                        log.error("Failed to add preference", throwable);
+                        sendMessage(chatId, "Failed to add preference: " + throwable.getMessage());
+                    })
+                    .subscribe();
+        } else {
+            sendMessage(chatId, "Invalid format. Use: /addpref preference");
+        }
+    }
+
+    private void handleViewPreferencesCommand(long chatId) {
+        if (!sessionService.isUserLoggedIn(chatId)) {
+            sendMessage(chatId, "You are not logged in.");
+            return;
+        }
+
+        Long userId = sessionService.getUserId(chatId);
+
+        userService.getUserPreferences(userId)
+                .collectList()
+                .doOnSuccess(preferences -> {
+                    if (preferences.isEmpty()) {
+                        sendMessage(chatId, "You have no preferences.");
+                    } else {
+                        sendMessage(chatId, "Your preferences: " + String.join(", ", preferences));
+                    }
+                })
+                .doOnError(throwable -> {
+                    log.error("Failed to fetch preferences", throwable);
+                    sendMessage(chatId, "Failed to fetch preferences: " + throwable.getMessage());
+                })
+                .subscribe();
+    }
+
+    private void handleDeletePreferenceCommand(long chatId, String messageText) {
+        if (!sessionService.isUserLoggedIn(chatId)) {
+            sendMessage(chatId, "You are not logged in.");
+            return;
+        }
+
+        String[] parts = messageText.split(" ", 2);
+        if (parts.length == 2) {
+            String preference = parts[1];
+            Long userId = sessionService.getUserId(chatId);
+
+            userService.getUserPreferences(userId)
+                    .collectList()
+                    .flatMap(preferences -> {
+                        if (preferences.contains(preference)) {
+                            return userService.deleteUserPreference(userId, preference)
+                                    .then(Mono.just("Preference deleted successfully!"));
+                        } else {
+                            return Mono.just("This preference does not exist in your list.");
+                        }
+                    })
+                    .doOnNext(response -> sendMessage(chatId, response))
+                    .doOnError(throwable -> {
+                        log.error("Failed to delete preference", throwable);
+                        sendMessage(chatId, "Failed to delete preference: " + throwable.getMessage());
+                    })
+                    .subscribe();
+        } else {
+            sendMessage(chatId, "Invalid format. Use: /delpref preference");
+        }
+    }
+
 
     private void sendMainMenu(long chatId) {
         SendMessage message = new SendMessage();
@@ -101,7 +188,10 @@ public class Bot extends TelegramLongPollingBot {
                     .doOnSuccess(aVoid -> sendMessage(chatId, "Registration successful!"))
                     .doOnError(throwable -> {
                         log.error("Registration failed", throwable);
-                        sendMessage(chatId, "Registration failed: " + throwable.getMessage());
+                        String errorMessage = throwable.getMessage().contains("User already exists") ?
+                                "Registration failed: User already exists" :
+                                "Registration failed: " + throwable.getMessage();
+                        sendMessage(chatId, errorMessage);
                     })
                     .subscribe();
         } else {
@@ -121,9 +211,17 @@ public class Bot extends TelegramLongPollingBot {
             String password = parts[2];
 
             userService.authenticate(username, password)
+                    .flatMap(authenticated -> {
+                        if (authenticated) {
+                            return userService.getUserIdByUsername(username)
+                                    .doOnSuccess(userId -> sessionService.logInUser(chatId, userId))
+                                    .then(Mono.just(authenticated));
+                        } else {
+                            return Mono.just(authenticated);
+                        }
+                    })
                     .doOnSuccess(authenticated -> {
                         if (authenticated) {
-                            sessionService.logInUser(chatId);
                             sendMessage(chatId, "Login successful!");
                         } else {
                             sendMessage(chatId, "Login failed: Invalid credentials");
@@ -131,7 +229,10 @@ public class Bot extends TelegramLongPollingBot {
                     })
                     .doOnError(throwable -> {
                         log.error("Login failed", throwable);
-                        sendMessage(chatId, "Login failed: " + throwable.getMessage());
+                        String errorMessage = throwable.getMessage().contains("User not found") ?
+                                "Login failed: User not found" :
+                                "Login failed: " + throwable.getMessage();
+                        sendMessage(chatId, errorMessage);
                     })
                     .subscribe();
         } else {
