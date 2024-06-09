@@ -13,6 +13,9 @@
         <module>node</module>
     </modules>
 
+
+
+
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
@@ -163,8 +166,14 @@
             <artifactId>spring-security-crypto</artifactId>
             <version>6.2.0</version>
         </dependency>
-    </dependencies>
 
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <version>4.12.0</version>
+        </dependency>
+
+    </dependencies>
 
 
 </project>
