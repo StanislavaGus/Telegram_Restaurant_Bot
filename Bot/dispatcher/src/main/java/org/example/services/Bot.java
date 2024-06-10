@@ -21,6 +21,7 @@ import reactor.core.publisher.Mono;
 
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Component
@@ -89,11 +90,131 @@ public class Bot extends TelegramLongPollingBot {
                 handleFindRestaurantCommand(chatId, messageText);
             } else if (messageText.startsWith("/randomrestaurant")) {
                 handleRandomRestaurantCommand(chatId, messageText);
+            } else if (messageText.startsWith("/visitlist")) {
+                handleVisitListCommand(chatId);
+            } else if (messageText.startsWith("/addvisit")) {
+                handleAddVisitCommand(chatId, messageText);
+            } else if (messageText.startsWith("/showlist")) {
+                handleShowListCommand(chatId);
+            } else if (messageText.startsWith("/markvisited")) {
+                handleMarkVisitedCommand(chatId, messageText);
+            } else if (messageText.startsWith("/removevisit")) {
+                handleRemoveVisitCommand(chatId, messageText);
             } else {
                 updateController.processUpdate(update);
             }
         }
     }
+
+    private void handleVisitListCommand(long chatId) {
+        sendMessage(chatId, "Available commands: /addvisit [restaurant_id], /showlist, /markvisited [restaurant_id], /removevisit [restaurant_id]");
+    }
+
+    private void handleAddVisitCommand(long chatId, String messageText) {
+        if (!sessionService.isUserLoggedIn(chatId)) {
+            sendMessage(chatId, "You are not logged in.");
+            return;
+        }
+
+        String[] parts = messageText.split(" ", 2);
+        if (parts.length == 2) {
+            String restaurantId = parts[1];
+            Long userId = sessionService.getUserId(chatId);
+
+            userService.addVisit(userId, restaurantId)
+                    .doOnSuccess(aVoid -> sendMessage(chatId, "Restaurant added to visit list successfully!"))
+                    .doOnError(throwable -> {
+                        log.error("Failed to add restaurant to visit list", throwable);
+                        sendMessage(chatId, "Failed to add restaurant to visit list: " + throwable.getMessage());
+                    })
+                    .subscribe();
+        } else {
+            sendMessage(chatId, "Invalid format. Use: /addvisit [restaurant_id]");
+        }
+    }
+
+    private void handleShowListCommand(long chatId) {
+        if (!sessionService.isUserLoggedIn(chatId)) {
+            sendMessage(chatId, "You are not logged in.");
+            return;
+        }
+
+        Long userId = sessionService.getUserId(chatId);
+
+        userService.getVisitList(userId)
+                .collectList()
+                .flatMap(visits -> {
+                    if (visits.isEmpty()) {
+                        return Mono.just("Your visit list is empty.");
+                    } else {
+                        StringBuilder response = new StringBuilder("Your visit list:\n\n");
+                        visits.forEach(visit -> response.append(visit).append("\n"));
+                        return Mono.just(response.toString());
+                    }
+                })
+                .doOnSuccess(response -> sendMessage(chatId, response))
+                .doOnError(throwable -> {
+                    log.error("Failed to fetch visit list", throwable);
+                    sendMessage(chatId, "Failed to fetch visit list: " + throwable.getMessage());
+                })
+                .subscribe();
+    }
+
+    private void handleMarkVisitedCommand(long chatId, String messageText) {
+        if (!sessionService.isUserLoggedIn(chatId)) {
+            sendMessage(chatId, "You are not logged in.");
+            return;
+        }
+
+        String[] parts = messageText.split(" ", 2);
+        if (parts.length == 2) {
+            String restaurantId = parts[1];
+            Long userId = sessionService.getUserId(chatId);
+
+            userService.markVisited(userId, restaurantId)
+                    .doOnSuccess(result -> {
+                        if (result) {
+                            sendMessage(chatId, "Restaurant marked as visited successfully!");
+                        } else {
+                            sendMessage(chatId, "Restaurant not found in your visit list.");
+                        }
+                    })
+                    .doOnError(throwable -> {
+                        log.error("Failed to mark restaurant as visited", throwable);
+                        sendMessage(chatId, "Failed to mark restaurant as visited: " + throwable.getMessage());
+                    })
+                    .subscribe();
+        } else {
+            sendMessage(chatId, "Invalid format. Use: /markvisited [restaurant_id]");
+        }
+    }
+
+
+    private void handleRemoveVisitCommand(long chatId, String messageText) {
+        if (!sessionService.isUserLoggedIn(chatId)) {
+            sendMessage(chatId, "You are not logged in.");
+            return;
+        }
+
+        String[] parts = messageText.split(" ", 2);
+        if (parts.length == 2) {
+            String restaurantId = parts[1];
+            Long userId = sessionService.getUserId(chatId);
+
+            userService.removeVisit(userId, restaurantId)
+                    .doOnSuccess(aVoid -> sendMessage(chatId, "Restaurant removed from visit list successfully!"))
+                    .doOnError(throwable -> {
+                        log.error("Failed to remove restaurant from visit list", throwable);
+                        sendMessage(chatId, "Failed to remove restaurant from visit list: " + throwable.getMessage());
+                    })
+                    .subscribe();
+        } else {
+            sendMessage(chatId, "Invalid format. Use: /removevisit [restaurant_id]");
+        }
+    }
+
+
+
 
     private void handleFindRestaurantCommand(long chatId, String messageText) {
         if (!sessionService.isUserLoggedIn(chatId)) {
@@ -110,13 +231,19 @@ public class Bot extends TelegramLongPollingBot {
 
             final String finalLocation = location;
             final String finalCuisine = cuisine;
-            final String finalSkipCategories = skipCategories;
 
             Long userId = sessionService.getUserId(chatId);
-            userService.getUserPreferences(userId)
-                    .collectList()
-                    .flatMap(preferences -> {
+            Mono<List<String>> preferencesMono = userService.getUserPreferences(userId).collectList();
+            Mono<List<String>> allergiesMono = userService.getUserAllergies(userId).collectList();
+
+            Mono.zip(preferencesMono, allergiesMono)
+                    .flatMap(tuple -> {
+                        List<String> preferences = tuple.getT1();
+                        List<String> allergies = tuple.getT2();
+
                         final String finalKeywords = keywords.isEmpty() && !preferences.isEmpty() ? String.join(",", preferences) : keywords;
+                        final String finalSkipCategories = skipCategories.isEmpty() && !allergies.isEmpty() ? String.join(",", allergies) : skipCategories;
+
                         return foursquareService.searchRestaurants(finalLocation, finalCuisine, finalKeywords, finalSkipCategories);
                     })
                     .doOnSuccess(response -> {
@@ -168,15 +295,22 @@ public class Bot extends TelegramLongPollingBot {
             String location = parts[1];
             String radius = parts[2];
 
-            foursquareService.searchRandomRestaurant(location, radius)
+            foursquareService.searchRestaurants(location, "", "", "") // Используем метод поиска ресторанов
                     .doOnSuccess(response -> {
                         StringBuilder responseMessage = new StringBuilder("Random restaurant:\n");
                         JsonNode results = response.get("results");
                         if (results.isArray() && results.size() > 0) {
-                            JsonNode restaurant = results.get(0);
+                            List<JsonNode> restaurantList = new ArrayList<>();
+                            results.forEach(restaurantList::add);
+                            Collections.shuffle(restaurantList); // Перемешиваем список результатов
+
+                            JsonNode restaurant = restaurantList.get(0); // Берем первый ресторан из перемешанного списка
                             String name = restaurant.get("name").asText();
                             String address = restaurant.get("location").get("formatted_address").asText();
-                            responseMessage.append(name).append(", ").append(address).append("\n");
+                            String fsqId = restaurant.get("fsq_id").asText();
+                            String link = "https://foursquare.com/v/" + fsqId; // Конструируем ссылку с помощью fsq_id
+
+                            responseMessage.append(name).append(", ").append(address).append("\n").append("Link: ").append(link).append("\n");
                         } else {
                             responseMessage.append("No restaurant found.");
                         }
@@ -191,6 +325,7 @@ public class Bot extends TelegramLongPollingBot {
             sendMessage(chatId, "Invalid format. Use: /randomrestaurant location radius");
         }
     }
+
 
     private void handleAddAllergyCommand(long chatId, String messageText) {
         if (!sessionService.isUserLoggedIn(chatId)) {

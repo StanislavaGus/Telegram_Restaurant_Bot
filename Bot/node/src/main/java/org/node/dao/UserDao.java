@@ -104,4 +104,42 @@ public class UserDao {
                 .bind("$2", allergy)
                 .then();
     }
+
+    public Mono<Void> saveVisit(Long userId, String restaurantId) {
+        String sql = "INSERT INTO visits (user_id, restaurant_id, visited) VALUES ($1, $2, false)";
+        return r2dbcEntityTemplate.getDatabaseClient()
+                .sql(sql)
+                .bind("$1", userId)
+                .bind("$2", restaurantId)
+                .then();
+    }
+
+    public Flux<String> findVisitsByUserId(Long userId) {
+        String sql = "SELECT restaurant_id FROM visits WHERE user_id = $1";
+        return r2dbcEntityTemplate.getDatabaseClient()
+                .sql(sql)
+                .bind("$1", userId)
+                .map(row -> row.get("restaurant_id", String.class))
+                .all();
+    }
+
+    public Mono<Void> updateVisitStatus(Long userId, String restaurantId, boolean visited) {
+        String sql = "UPDATE visits SET visited = $1 WHERE user_id = $2 AND restaurant_id = $3";
+        return r2dbcEntityTemplate.getDatabaseClient()
+                .sql(sql)
+                .bind("$1", visited)
+                .bind("$2", userId)
+                .bind("$3", restaurantId)
+                .then();
+    }
+
+    public Mono<Void> deleteVisit(Long userId, String restaurantId) {
+        String sql = "DELETE FROM visits WHERE user_id = $1 AND restaurant_id = $2";
+        return r2dbcEntityTemplate.getDatabaseClient()
+                .sql(sql)
+                .bind("$1", userId)
+                .bind("$2", restaurantId)
+                .then();
+    }
+
 }

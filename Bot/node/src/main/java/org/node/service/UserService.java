@@ -139,5 +139,34 @@ public class UserService {
                 .filter(acceptableAllergy -> acceptableAllergy.getAllergy().equalsIgnoreCase(allergy))
                 .hasElements();
     }
+
+    public Mono<Void> addVisit(Long userId, String restaurantId) {
+        return userDao.saveVisit(userId, restaurantId);
+    }
+
+    public Flux<String> getVisitList(Long userId) {
+        return userDao.findVisitsByUserId(userId);
+    }
+
+    public Mono<Boolean> markVisited(Long userId, String restaurantId) {
+        return userDao.findVisitsByUserId(userId)
+                .filter(visit -> visit.equals(restaurantId))
+                .hasElements()
+                .flatMap(exists -> {
+                    if (exists) {
+                        return userDao.updateVisitStatus(userId, restaurantId, true)
+                                .thenReturn(true);
+                    } else {
+                        return Mono.just(false);
+                    }
+                });
+    }
+
+
+    public Mono<Void> removeVisit(Long userId, String restaurantId) {
+        return userDao.deleteVisit(userId, restaurantId);
+    }
+
+
 }
 

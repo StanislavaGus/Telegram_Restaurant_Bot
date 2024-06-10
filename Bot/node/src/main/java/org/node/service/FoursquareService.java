@@ -96,4 +96,5 @@ public class FoursquareService {
             return null;
         }
     }
+
 }
