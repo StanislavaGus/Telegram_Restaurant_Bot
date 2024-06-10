@@ -4,6 +4,8 @@
 
 The Dispatcher Bot Application is a Telegram bot designed to handle various user commands, interact with a RabbitMQ message broker(interaction with the message broker is configured, but is not used directly for messaging, this item will be configured in the near future), and integrate with a Foursquare service to provide restaurant recommendations. The bot allows users to register, login, add preferences and allergies, and find restaurants based on their preferences. The application consists of several components, including a bot service, message processing, and interaction with a PostgreSQL database.
 
+Link: https://t.me/you_want_food_use_Restaurant_bot
+
 ## Features
 
 - User Registration and Login: Users can register and log in to the bot.
