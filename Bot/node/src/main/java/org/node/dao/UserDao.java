@@ -77,4 +77,31 @@ public class UserDao {
                 .bind("$2", preference)
                 .then();
     }
+
+    public Mono<Void> saveUserAllergy(Long userId, String allergy) {
+        String sql = "INSERT INTO allergies (user_id, allergy) VALUES ($1, $2)";
+        return r2dbcEntityTemplate.getDatabaseClient()
+                .sql(sql)
+                .bind("$1", userId)
+                .bind("$2", allergy)
+                .then();
+    }
+
+    public Flux<String> findAllergiesByUserId(Long userId) {
+        String sql = "SELECT allergy FROM allergies WHERE user_id = $1";
+        return r2dbcEntityTemplate.getDatabaseClient()
+                .sql(sql)
+                .bind("$1", userId)
+                .map(row -> row.get("allergy", String.class))
+                .all();
+    }
+
+    public Mono<Void> deleteUserAllergy(Long userId, String allergy) {
+        String sql = "DELETE FROM allergies WHERE user_id = $1 AND allergy = $2";
+        return r2dbcEntityTemplate.getDatabaseClient()
+                .sql(sql)
+                .bind("$1", userId)
+                .bind("$2", allergy)
+                .then();
+    }
 }

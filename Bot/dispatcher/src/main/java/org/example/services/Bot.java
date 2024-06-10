@@ -75,11 +75,92 @@ public class Bot extends TelegramLongPollingBot {
                 handleViewPreferencesCommand(chatId);
             } else if (messageText.startsWith("/delpref")) {
                 handleDeletePreferenceCommand(chatId, messageText);
+            } else if (messageText.startsWith("/addallergy")) {
+                handleAddAllergyCommand(chatId, messageText);
+            } else if (messageText.startsWith("/viewallergies")) {
+                handleViewAllergiesCommand(chatId);
+            } else if (messageText.startsWith("/delallergy")) {
+                handleDeleteAllergyCommand(chatId, messageText);
             } else {
                 updateController.processUpdate(update);
             }
         }
     }
+
+    private void handleAddAllergyCommand(long chatId, String messageText) {
+        if (!sessionService.isUserLoggedIn(chatId)) {
+            sendMessage(chatId, "You are not logged in.");
+            return;
+        }
+
+        String[] parts = messageText.split(" ", 2);
+        if (parts.length == 2) {
+            String allergy = parts[1];
+            Long userId = sessionService.getUserId(chatId);
+
+            userService.addUserAllergy(userId, allergy)
+                    .doOnSuccess(aVoid -> sendMessage(chatId, "Allergy added successfully!"))
+                    .doOnError(throwable -> {
+                        log.error("Failed to add allergy", throwable);
+                        sendMessage(chatId, "Failed to add allergy: " + throwable.getMessage());
+                    })
+                    .subscribe();
+        } else {
+            sendMessage(chatId, "Invalid format. Use: /addallergy allergy");
+        }
+    }
+
+
+
+    private void handleViewAllergiesCommand(long chatId) {
+        if (!sessionService.isUserLoggedIn(chatId)) {
+            sendMessage(chatId, "You are not logged in.");
+            return;
+        }
+
+        Long userId = sessionService.getUserId(chatId);
+
+        userService.getUserAllergies(userId)
+                .collectList()
+                .doOnSuccess(allergies -> {
+                    if (allergies.isEmpty()) {
+                        sendMessage(chatId, "You have no allergies.");
+                    } else {
+                        sendMessage(chatId, "Your allergies: " + String.join(", ", allergies));
+                    }
+                })
+                .doOnError(throwable -> {
+                    log.error("Failed to fetch allergies", throwable);
+                    sendMessage(chatId, "Failed to fetch allergies: " + throwable.getMessage());
+                })
+                .subscribe();
+    }
+
+    private void handleDeleteAllergyCommand(long chatId, String messageText) {
+        if (!sessionService.isUserLoggedIn(chatId)) {
+            sendMessage(chatId, "You are not logged in.");
+            return;
+        }
+
+        String[] parts = messageText.split(" ", 2);
+        if (parts.length == 2) {
+            String allergy = parts[1];
+            Long userId = sessionService.getUserId(chatId);
+
+            userService.deleteUserAllergy(userId, allergy)
+                    .then(Mono.just("Allergy deleted successfully!"))
+                    .doOnSuccess(response -> sendMessage(chatId, response))
+                    .doOnError(throwable -> {
+                        log.error("Failed to delete allergy", throwable);
+                        sendMessage(chatId, "Failed to delete allergy: " + throwable.getMessage());
+                    })
+                    .subscribe();
+        } else {
+            sendMessage(chatId, "Invalid format. Use: /delallergy allergy");
+        }
+    }
+
+
 
     private void handleAddPreferenceCommand(long chatId, String messageText) {
         if (!sessionService.isUserLoggedIn(chatId)) {

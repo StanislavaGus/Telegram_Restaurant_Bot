@@ -1,0 +1,14 @@
+Peanut Allergy
+Tree Nut Allergy
+Dairy Allergy
+Egg Allergy
+Soy Allergy
+Wheat Allergy
+Shellfish Allergy
+Fish Allergy
+Sesame Allergy
+Mustard Allergy
+Celery Allergy
+Lupin Allergy
+Sulphite Allergy
+Gluten Allergy

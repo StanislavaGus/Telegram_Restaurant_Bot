@@ -1,7 +1,10 @@
 package org.node.service;
 
 import org.node.dao.UserDao;
-import org.node.entity.User;
+import org.node.entity.Allergy;
+import org.node.repository.AllergiesRepository;
+import org.node.repository.AcceptableAllergiesRepository;
+import org.node.repository.AvailablePreferencesRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -12,11 +15,18 @@ import reactor.core.publisher.Mono;
 public class UserService {
 
     private final UserDao userDao;
+    private final AvailablePreferencesRepository availablePreferencesRepository;
+    private final AllergiesRepository allergiesRepository;
+    private final AcceptableAllergiesRepository acceptableAllergiesRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public UserService(UserDao userDao, PasswordEncoder passwordEncoder) {
+    public UserService(UserDao userDao, AvailablePreferencesRepository availablePreferencesRepository,
+                       AllergiesRepository allergiesRepository, AcceptableAllergiesRepository acceptableAllergiesRepository, PasswordEncoder passwordEncoder) {
         this.userDao = userDao;
+        this.availablePreferencesRepository = availablePreferencesRepository;
+        this.allergiesRepository = allergiesRepository;
+        this.acceptableAllergiesRepository = acceptableAllergiesRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -49,7 +59,18 @@ public class UserService {
     }
 
     public Mono<Void> addUserPreference(Long userId, String preference) {
-        return userDao.saveUserPreference(userId, preference);
+        return availablePreferencesRepository.findAll()
+                .filter(availablePreference -> availablePreference.getPreference().equals(preference))
+                .collectList()
+                .flatMap(preferences -> {
+                    if (preferences.size() == 1) {
+                        return userDao.saveUserPreference(userId, preference).then();
+                    } else if (preferences.isEmpty()) {
+                        return Mono.error(new IllegalArgumentException("Invalid preference"));
+                    } else {
+                        return Mono.error(new IllegalStateException("Multiple preferences found"));
+                    }
+                });
     }
 
     public Flux<String> getUserPreferences(Long userId) {
@@ -59,4 +80,54 @@ public class UserService {
     public Mono<Void> deleteUserPreference(Long userId, String preference) {
         return userDao.deleteUserPreference(userId, preference);
     }
+
+    public Mono<Void> addUserAllergy(Long userId, String allergy) {
+        return acceptableAllergiesRepository.findAll()
+                .filter(acceptableAllergy -> acceptableAllergy.getAllergy().equalsIgnoreCase(allergy))
+                .hasElements()
+                .flatMap(isAcceptable -> {
+                    if (isAcceptable) {
+                        return allergiesRepository.findByUserId(userId)
+                                .filter(existingAllergy -> existingAllergy.getAllergy().equalsIgnoreCase(allergy))
+                                .hasElements()
+                                .flatMap(isAlreadyAdded -> {
+                                    if (isAlreadyAdded) {
+                                        return Mono.error(new IllegalArgumentException("Allergy already added for user"));
+                                    } else {
+                                        Allergy newAllergy = new Allergy();
+                                        newAllergy.setUserId(userId);
+                                        newAllergy.setAllergy(allergy);
+                                        return allergiesRepository.save(newAllergy).then();
+                                    }
+                                });
+                    } else {
+                        return Mono.error(new IllegalArgumentException("Invalid allergy"));
+                    }
+                });
+    }
+
+
+    public Flux<String> getUserAllergies(Long userId) {
+        return allergiesRepository.findByUserId(userId)
+                .map(Allergy::getAllergy);
+    }
+
+    public Mono<Void> deleteUserAllergy(Long userId, String allergy) {
+        return allergiesRepository.findByUserId(userId)
+                .filter(existingAllergy -> existingAllergy.getAllergy().equalsIgnoreCase(allergy))
+                .singleOrEmpty()
+                .flatMap(existingAllergy ->
+                        allergiesRepository.delete(existingAllergy)
+                                .then(Mono.just("Allergy deleted successfully!"))
+                )
+                .switchIfEmpty(Mono.error(new IllegalArgumentException("Allergy not found for user")))
+                .then();
+    }
+
+    public Mono<Boolean> isAcceptableAllergy(String allergy) {
+        return acceptableAllergiesRepository.findAll()
+                .filter(acceptableAllergy -> acceptableAllergy.getAllergy().equalsIgnoreCase(allergy))
+                .hasElements();
+    }
 }
+
