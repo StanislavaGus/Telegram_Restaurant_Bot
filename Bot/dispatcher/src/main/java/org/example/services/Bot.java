@@ -101,21 +101,33 @@ public class Bot extends TelegramLongPollingBot {
             return;
         }
 
-        String[] parts = messageText.split(" ", 4);
-        if (parts.length >= 2) {
-            String location = parts[1];
-            String cuisine = parts.length >= 3 ? parts[2] : "";
-            String keywords = parts.length == 4 ? parts[3] : "";
+        String[] parts = messageText.split(",", 4);
+        if (parts.length >= 1) {
+            String location = parts[0].trim();
+            String cuisine = parts.length >= 2 ? parts[1].trim() : "";
+            String keywords = parts.length >= 3 ? parts[2].trim() : "";
+            String skipCategories = parts.length == 4 ? parts[3].trim() : "";
 
-            foursquareService.searchRestaurants(location, cuisine, keywords)
+            final String finalLocation = location;
+            final String finalCuisine = cuisine;
+            final String finalSkipCategories = skipCategories;
+
+            Long userId = sessionService.getUserId(chatId);
+            userService.getUserPreferences(userId)
+                    .collectList()
+                    .flatMap(preferences -> {
+                        final String finalKeywords = keywords.isEmpty() && !preferences.isEmpty() ? String.join(",", preferences) : keywords;
+                        return foursquareService.searchRestaurants(finalLocation, finalCuisine, finalKeywords, finalSkipCategories);
+                    })
                     .doOnSuccess(response -> {
-                        StringBuilder responseMessage = new StringBuilder("Restaurants found:\n");
+                        StringBuilder responseMessage = new StringBuilder("Restaurants found:\n\n");
                         JsonNode results = response.get("results");
                         if (results.isArray() && results.size() > 0) {
                             for (JsonNode restaurant : results) {
                                 String name = restaurant.get("name").asText();
                                 String address = restaurant.get("location").get("formatted_address").asText();
-                                responseMessage.append(name).append(", ").append(address).append("\n");
+                                String link = "https://foursquare.com/v/" + restaurant.get("fsq_id").asText(); // Construct the link using fsq_id
+                                responseMessage.append(name).append(", ").append(address).append("\n").append("Link: ").append(link).append("\n\n");
                             }
                         } else {
                             responseMessage.append("No restaurants found.");
@@ -128,9 +140,13 @@ public class Bot extends TelegramLongPollingBot {
                     })
                     .subscribe();
         } else {
-            sendMessageWithMarkdown(chatId, "Invalid format. Use: /findrestaurant location [categoryID] [keywords]\n\nWhere the category is specified in the format of the number 1300-13392.\n\nThe breakdown of the categories can be viewed on the [website](https://docs.foursquare.com/data-products/docs/categories).");
+            sendMessageWithMarkdown(chatId, "Invalid format. Use: /findrestaurant location, categoryID, keywords_1 ... " +
+                    "keywords_n, skipCategories_1 .. skipCategories_n\n\nWhere the location is a specific city, you can enter it in both Russian and English." +
+                    "\n\nWhere the categoryID is specified in the format of the number" +
+                    " 1300-13392.\n\nThe breakdown of the categories can be viewed on the [website](https://docs.foursquare.com/data-products/docs/categories).");
         }
     }
+
 
     private void sendMessageWithMarkdown(long chatId, String text) {
         SendMessage message = new SendMessage();

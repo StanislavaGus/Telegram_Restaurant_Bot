@@ -38,7 +38,8 @@ public class UserController {
     @GetMapping("/searchRestaurants")
     public Mono<JsonNode> searchRestaurants(@RequestParam String location,
                                             @RequestParam(required = false) String cuisine,
-                                            @RequestParam(required = false) String keywords) {
-        return foursquareService.searchRestaurants(location, cuisine, keywords);
+                                            @RequestParam(required = false) String keywords,
+                                            @RequestParam(required = false, defaultValue = "") String skip) {
+        return foursquareService.searchRestaurants(location, cuisine, keywords, skip);
     }
 }

@@ -25,7 +25,7 @@ public class FoursquareService {
         this.apiKey = apiKey;
     }
 
-    public Mono<JsonNode> searchRestaurants(String location, String cuisine, String keywords) {
+    public Mono<JsonNode> searchRestaurants(String location, String cuisine, String keywords, String skipCategories) {
         return Mono.fromCallable(() -> {
             StringBuilder urlBuilder = new StringBuilder("https://api.foursquare.com/v3/places/search?query=restaurant&near=")
                     .append(location);
@@ -34,6 +34,9 @@ public class FoursquareService {
             }
             if (keywords != null && !keywords.isEmpty()) {
                 urlBuilder.append("&keywords=").append(keywords);
+            }
+            if (skipCategories != null && !skipCategories.isEmpty()) {
+                urlBuilder.append("&exclude_categories=").append(skipCategories);
             }
             urlBuilder.append("&limit=10");
 
@@ -72,5 +75,25 @@ public class FoursquareService {
                 return objectMapper.readTree(response.body().string());
             }
         });
+    }
+
+    public String getRestaurantLink(String fsqId) {
+        String url = "https://api.foursquare.com/v3/places/" + fsqId;
+        Request request = new Request.Builder()
+                .url(url)
+                .addHeader("Authorization", apiKey)
+                .addHeader("accept", "application/json")
+                .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                throw new IOException("Unexpected code " + response);
+            }
+            JsonNode jsonNode = objectMapper.readTree(response.body().string());
+            return jsonNode.get("link").asText();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }
