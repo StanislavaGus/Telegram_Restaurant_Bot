@@ -27,7 +27,7 @@ public class ConsumeServiceImpl implements ConsumerService {
         var message = update.getMessage();
         var sendMessage = new SendMessage();
         sendMessage.setChatId(message.getChatId().toString());
-        sendMessage.setText("Hello from NODE!");
+        sendMessage.setText("Invalid text message, call /help to see the valid commands.");
         producerService.produserAnswer(sendMessage);
     }
 
@@ -35,11 +35,13 @@ public class ConsumeServiceImpl implements ConsumerService {
     @RabbitListener(queues = DOC_MESSAGE_UPDATE)
     public void consumeDocMessageUpdates(Update update) {
         log.info("NODE: Doc message is received");
+
     }
 
     @Override
     @RabbitListener(queues = PHOTO_MESSAGE_UPDATE)
     public void consumePhotoMessageUpdates(Update update) {
         log.info("NODE: Photo message is received");
+
     }
 }

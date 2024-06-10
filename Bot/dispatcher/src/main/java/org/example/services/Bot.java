@@ -62,51 +62,65 @@ public class Bot extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
-        if (update.hasMessage() && update.getMessage().hasText()) {
+        if (update.hasMessage()) {
             String messageText = update.getMessage().getText();
             long chatId = update.getMessage().getChatId();
 
-            if (messageText.equals("/start")) {
-                sendMainMenu(chatId);
-            } else if (messageText.equals("/help")) {
-                sendHelpMessage(chatId);
-            } else if (messageText.startsWith("/register")) {
-                handleRegisterCommand(chatId, messageText);
-            } else if (messageText.startsWith("/login")) {
-                handleLoginCommand(chatId, messageText);
-            } else if (messageText.startsWith("/logout")) {
-                handleLogoutCommand(chatId);
-            } else if (messageText.startsWith("/addpref")) {
-                handleAddPreferenceCommand(chatId, messageText);
-            } else if (messageText.startsWith("/viewprefs")) {
-                handleViewPreferencesCommand(chatId);
-            } else if (messageText.startsWith("/delpref")) {
-                handleDeletePreferenceCommand(chatId, messageText);
-            } else if (messageText.startsWith("/addallergy")) {
-                handleAddAllergyCommand(chatId, messageText);
-            } else if (messageText.startsWith("/viewallergies")) {
-                handleViewAllergiesCommand(chatId);
-            } else if (messageText.startsWith("/delallergy")) {
-                handleDeleteAllergyCommand(chatId, messageText);
-            } else if (messageText.startsWith("/findrestaurant")) {
-                handleFindRestaurantCommand(chatId, messageText);
-            } else if (messageText.startsWith("/randomrestaurant")) {
-                handleRandomRestaurantCommand(chatId, messageText);
-            } else if (messageText.startsWith("/visitlist")) {
-                handleVisitListCommand(chatId);
-            } else if (messageText.startsWith("/addvisit")) {
-                handleAddVisitCommand(chatId, messageText);
-            } else if (messageText.startsWith("/showlist")) {
-                handleShowListCommand(chatId);
-            } else if (messageText.startsWith("/markvisited")) {
-                handleMarkVisitedCommand(chatId, messageText);
-            } else if (messageText.startsWith("/removevisit")) {
-                handleRemoveVisitCommand(chatId, messageText);
+            if (update.getMessage().hasText()) {
+                if (messageText.equals("/start")) {
+                    sendMainMenu(chatId);
+                } else if (messageText.equals("/help")) {
+                    sendHelpMessage(chatId);
+                } else if (messageText.startsWith("/register")) {
+                    handleRegisterCommand(chatId, messageText);
+                } else if (messageText.startsWith("/login")) {
+                    handleLoginCommand(chatId, messageText);
+                } else if (messageText.startsWith("/logout")) {
+                    handleLogoutCommand(chatId);
+                } else if (messageText.startsWith("/addpref")) {
+                    handleAddPreferenceCommand(chatId, messageText);
+                } else if (messageText.startsWith("/viewprefs")) {
+                    handleViewPreferencesCommand(chatId);
+                } else if (messageText.startsWith("/delpref")) {
+                    handleDeletePreferenceCommand(chatId, messageText);
+                } else if (messageText.startsWith("/addallergy")) {
+                    handleAddAllergyCommand(chatId, messageText);
+                } else if (messageText.startsWith("/viewallergies")) {
+                    handleViewAllergiesCommand(chatId);
+                } else if (messageText.startsWith("/delallergy")) {
+                    handleDeleteAllergyCommand(chatId, messageText);
+                } else if (messageText.startsWith("/findrestaurant")) {
+                    handleFindRestaurantCommand(chatId, messageText);
+                } else if (messageText.startsWith("/randomrestaurant")) {
+                    handleRandomRestaurantCommand(chatId, messageText);
+                } else if (messageText.startsWith("/visitlist")) {
+                    handleVisitListCommand(chatId);
+                } else if (messageText.startsWith("/addvisit")) {
+                    handleAddVisitCommand(chatId, messageText);
+                } else if (messageText.startsWith("/showlist")) {
+                    handleShowListCommand(chatId);
+                } else if (messageText.startsWith("/markvisited")) {
+                    handleMarkVisitedCommand(chatId, messageText);
+                } else if (messageText.startsWith("/removevisit")) {
+                    handleRemoveVisitCommand(chatId, messageText);
+                } else {
+                    sendHelpSuggestion(chatId);
+                }
             } else {
-                updateController.processUpdate(update);
+                sendUnsupportedMessageType(chatId);
             }
         }
     }
+
+    private void sendUnsupportedMessageType(long chatId) {
+        sendMessage(chatId, "Unsupported file type! Please use /help to see the valid commands.");
+    }
+
+    private void sendHelpSuggestion(long chatId) {
+        sendMessage(chatId, "Invalid message. Please use /help to see the valid commands.");
+    }
+
+
 
     private void sendHelpMessage(long chatId) {
         String helpMessage = "Available commands:\n\n" +

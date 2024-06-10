@@ -68,7 +68,7 @@ public class UpdateController {
     public void setView(SendMessage sendMessage) {
         bot.sendAnswerMessage(sendMessage);
     }
-    //Нет обработки измененного сообщения
+
 
     private void processPhotoMessage(Update update) {
         updateProducer.produce(PHOTO_MESSAGE_UPDATE, update);
