@@ -1,6 +1,7 @@
 package org.node.dao;
 
 import org.node.entity.User;
+import org.node.entity.Visit;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import org.springframework.stereotype.Repository;
@@ -114,12 +115,15 @@ public class UserDao {
                 .then();
     }
 
-    public Flux<String> findVisitsByUserId(Long userId) {
-        String sql = "SELECT restaurant_id FROM visits WHERE user_id = $1";
+    public Flux<Visit> findVisitsByUserId(Long userId) {
+        String sql = "SELECT restaurant_id, visited FROM visits WHERE user_id = $1";
         return r2dbcEntityTemplate.getDatabaseClient()
                 .sql(sql)
                 .bind("$1", userId)
-                .map(row -> row.get("restaurant_id", String.class))
+                .map((row, metadata) -> new Visit(
+                        row.get("restaurant_id", String.class),
+                        row.get("visited", Boolean.class)
+                ))
                 .all();
     }
 

@@ -3,6 +3,7 @@ package org.node.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.node.dao.UserDao;
 import org.node.entity.Allergy;
+import org.node.entity.Visit;
 import org.node.repository.AllergiesRepository;
 import org.node.repository.AcceptableAllergiesRepository;
 import org.node.repository.AvailablePreferencesRepository;
@@ -144,9 +145,10 @@ public class UserService {
         return userDao.saveVisit(userId, restaurantId);
     }
 
-    public Flux<String> getVisitList(Long userId) {
+    public Flux<Visit> getVisitList(Long userId) {
         return userDao.findVisitsByUserId(userId);
     }
+
 
     public Mono<Boolean> markVisited(Long userId, String restaurantId) {
         return userDao.findVisitsByUserId(userId)
