@@ -1,8 +1,10 @@
 package org.example.services;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.log4j.Log4j2;
 import org.example.configuration.BotConfiguration;
 import org.example.controller.UpdateController;
+import org.node.service.FoursquareService;
 import org.node.service.SessionService;
 import org.node.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,14 +32,16 @@ public class Bot extends TelegramLongPollingBot {
     private final UpdateController updateController;
     private final UserService userService;
     private final SessionService sessionService;
+    private final FoursquareService foursquareService;
 
     @Autowired
-    public Bot(BotConfiguration botConfig, AnnotationConfigApplicationContext context, UpdateController updateController, UserService userService, SessionService sessionService) {
+    public Bot(BotConfiguration botConfig, AnnotationConfigApplicationContext context, UpdateController updateController, UserService userService, SessionService sessionService, FoursquareService foursquareService) {
         this.config = botConfig;
         this.context = context;
         this.updateController = updateController;
         this.userService = userService;
         this.sessionService = sessionService;
+        this.foursquareService = foursquareService;
     }
 
     @PostConstruct
@@ -81,9 +85,94 @@ public class Bot extends TelegramLongPollingBot {
                 handleViewAllergiesCommand(chatId);
             } else if (messageText.startsWith("/delallergy")) {
                 handleDeleteAllergyCommand(chatId, messageText);
+            } else if (messageText.startsWith("/findrestaurant")) {
+                handleFindRestaurantCommand(chatId, messageText);
+            } else if (messageText.startsWith("/randomrestaurant")) {
+                handleRandomRestaurantCommand(chatId, messageText);
             } else {
                 updateController.processUpdate(update);
             }
+        }
+    }
+
+    private void handleFindRestaurantCommand(long chatId, String messageText) {
+        if (!sessionService.isUserLoggedIn(chatId)) {
+            sendMessage(chatId, "You are not logged in.");
+            return;
+        }
+
+        String[] parts = messageText.split(" ", 4);
+        if (parts.length >= 2) {
+            String location = parts[1];
+            String cuisine = parts.length >= 3 ? parts[2] : "";
+            String keywords = parts.length == 4 ? parts[3] : "";
+
+            foursquareService.searchRestaurants(location, cuisine, keywords)
+                    .doOnSuccess(response -> {
+                        StringBuilder responseMessage = new StringBuilder("Restaurants found:\n");
+                        JsonNode results = response.get("results");
+                        if (results.isArray() && results.size() > 0) {
+                            for (JsonNode restaurant : results) {
+                                String name = restaurant.get("name").asText();
+                                String address = restaurant.get("location").get("formatted_address").asText();
+                                responseMessage.append(name).append(", ").append(address).append("\n");
+                            }
+                        } else {
+                            responseMessage.append("No restaurants found.");
+                        }
+                        sendMessage(chatId, responseMessage.toString());
+                    })
+                    .doOnError(throwable -> {
+                        log.error("Failed to find restaurant", throwable);
+                        sendMessage(chatId, "Failed to find restaurant: " + throwable.getMessage());
+                    })
+                    .subscribe();
+        } else {
+            sendMessageWithMarkdown(chatId, "Invalid format. Use: /findrestaurant location [categoryID] [keywords]\n\nWhere the category is specified in the format of the number 1300-13392.\n\nThe breakdown of the categories can be viewed on the [website](https://docs.foursquare.com/data-products/docs/categories).");
+        }
+    }
+
+    private void sendMessageWithMarkdown(long chatId, String text) {
+        SendMessage message = new SendMessage();
+        message.setChatId(String.valueOf(chatId));
+        message.setText(text);
+        message.enableMarkdown(true);
+        sendAnswerMessage(message);
+    }
+
+
+    private void handleRandomRestaurantCommand(long chatId, String messageText) {
+        if (!sessionService.isUserLoggedIn(chatId)) {
+            sendMessage(chatId, "You are not logged in.");
+            return;
+        }
+
+        String[] parts = messageText.split(" ", 3);
+        if (parts.length == 3) {
+            String location = parts[1];
+            String radius = parts[2];
+
+            foursquareService.searchRandomRestaurant(location, radius)
+                    .doOnSuccess(response -> {
+                        StringBuilder responseMessage = new StringBuilder("Random restaurant:\n");
+                        JsonNode results = response.get("results");
+                        if (results.isArray() && results.size() > 0) {
+                            JsonNode restaurant = results.get(0);
+                            String name = restaurant.get("name").asText();
+                            String address = restaurant.get("location").get("formatted_address").asText();
+                            responseMessage.append(name).append(", ").append(address).append("\n");
+                        } else {
+                            responseMessage.append("No restaurant found.");
+                        }
+                        sendMessage(chatId, responseMessage.toString());
+                    })
+                    .doOnError(throwable -> {
+                        log.error("Failed to find random restaurant", throwable);
+                        sendMessage(chatId, "Failed to find random restaurant: " + throwable.getMessage());
+                    })
+                    .subscribe();
+        } else {
+            sendMessage(chatId, "Invalid format. Use: /randomrestaurant location radius");
         }
     }
 

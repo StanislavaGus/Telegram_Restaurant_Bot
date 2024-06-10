@@ -25,12 +25,44 @@ public class FoursquareService {
         this.apiKey = apiKey;
     }
 
-    public Mono<JsonNode> searchRestaurants(String location) {
+    public Mono<JsonNode> searchRestaurants(String location, String cuisine, String keywords) {
         return Mono.fromCallable(() -> {
-            String url = String.format("https://api.foursquare.com/v3/places/search?query=restaurant&near=%s&limit=10", location);
+            StringBuilder urlBuilder = new StringBuilder("https://api.foursquare.com/v3/places/search?query=restaurant&near=")
+                    .append(location);
+            if (cuisine != null && !cuisine.isEmpty()) {
+                urlBuilder.append("&categories=").append(cuisine);
+            }
+            if (keywords != null && !keywords.isEmpty()) {
+                urlBuilder.append("&keywords=").append(keywords);
+            }
+            urlBuilder.append("&limit=10");
+
             Request request = new Request.Builder()
-                    .url(url)
-                    .addHeader("Authorization", "Bearer " + apiKey)
+                    .url(urlBuilder.toString())
+                    .addHeader("Authorization", apiKey)
+                    .addHeader("accept", "application/json")
+                    .build();
+
+            try (Response response = client.newCall(request).execute()) {
+                if (!response.isSuccessful()) {
+                    throw new IOException("Unexpected code " + response);
+                }
+                return objectMapper.readTree(response.body().string());
+            }
+        });
+    }
+
+    public Mono<JsonNode> searchRandomRestaurant(String location, String radius) {
+        return Mono.fromCallable(() -> {
+            StringBuilder urlBuilder = new StringBuilder("https://api.foursquare.com/v3/places/search?query=restaurant&near=")
+                    .append(location)
+                    .append("&area=").append(radius)
+                    .append("&limit=1");
+
+            Request request = new Request.Builder()
+                    .url(urlBuilder.toString())
+                    .addHeader("Authorization", apiKey)
+                    .addHeader("accept", "application/json")
                     .build();
 
             try (Response response = client.newCall(request).execute()) {

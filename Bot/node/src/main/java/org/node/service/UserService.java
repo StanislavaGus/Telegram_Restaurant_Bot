@@ -1,5 +1,6 @@
 package org.node.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.node.dao.UserDao;
 import org.node.entity.Allergy;
 import org.node.repository.AllergiesRepository;
@@ -19,17 +20,26 @@ public class UserService {
     private final AllergiesRepository allergiesRepository;
     private final AcceptableAllergiesRepository acceptableAllergiesRepository;
     private final PasswordEncoder passwordEncoder;
+    private final FoursquareService foursquareService;
 
     @Autowired
     public UserService(UserDao userDao, AvailablePreferencesRepository availablePreferencesRepository,
-                       AllergiesRepository allergiesRepository, AcceptableAllergiesRepository acceptableAllergiesRepository, PasswordEncoder passwordEncoder) {
+                       AllergiesRepository allergiesRepository, AcceptableAllergiesRepository acceptableAllergiesRepository, PasswordEncoder passwordEncoder, FoursquareService foursquareService) {
         this.userDao = userDao;
         this.availablePreferencesRepository = availablePreferencesRepository;
         this.allergiesRepository = allergiesRepository;
         this.acceptableAllergiesRepository = acceptableAllergiesRepository;
         this.passwordEncoder = passwordEncoder;
+        this.foursquareService = foursquareService;
     }
 
+    public Mono<JsonNode> findRestaurant(String location, String cuisine, String keywords) {
+        return foursquareService.searchRestaurants(location, cuisine, keywords);
+    }
+
+    public Mono<JsonNode> requestRandomRestaurant(String location, String area) {
+        return foursquareService.searchRandomRestaurant(location, area);
+    }
     public Mono<Void> addUser(String username, String password, String email) {
         return userDao.findUserByUsername(username)
                 .flatMap(existingUser -> Mono.error(new IllegalArgumentException("User already exists")))
