@@ -687,7 +687,7 @@ public class Bot extends TelegramLongPollingBot {
     }
 
     private void chooseDistance(long chatId) {
-        sendMessage(chatId, "Write the search radius in kilometers");
+        sendMessage(chatId, "Write the search radius in meters");
         this.choosingDistanceFlag = true;
     }
 
