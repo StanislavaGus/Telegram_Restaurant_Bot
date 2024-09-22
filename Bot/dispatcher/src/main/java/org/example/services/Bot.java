@@ -1075,6 +1075,13 @@ public class Bot extends TelegramLongPollingBot {
         DeleteMessage deleteMessage = new DeleteMessage();
         deleteMessage.setChatId(String.valueOf(chatId));
         deleteMessage.setMessageId(messageId);
+
+        // Выполнение удаления сообщения
+        try {
+            execute(deleteMessage);
+        } catch (TelegramApiException e) {
+            log.error("Failed to delete message", e);
+        }
     }
 
     private void handleLoginCommand(long chatId, String messageText, int messageId) {
