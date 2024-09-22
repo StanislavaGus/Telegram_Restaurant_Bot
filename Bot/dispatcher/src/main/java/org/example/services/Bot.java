@@ -12,8 +12,12 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.Location;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardRemove;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -21,6 +25,7 @@ import reactor.core.publisher.Mono;
 
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -34,6 +39,8 @@ public class Bot extends TelegramLongPollingBot {
     private final UserService userService;
     private final SessionService sessionService;
     private final FoursquareService foursquareService;
+    private Boolean choosingCityFlag;
+    private Boolean choosingDistanceFlag;
 
     @Autowired
     public Bot(BotConfiguration botConfig, AnnotationConfigApplicationContext context, UpdateController updateController, UserService userService, SessionService sessionService, FoursquareService foursquareService) {
@@ -43,6 +50,8 @@ public class Bot extends TelegramLongPollingBot {
         this.userService = userService;
         this.sessionService = sessionService;
         this.foursquareService = foursquareService;
+        this.choosingCityFlag = false;
+        this.choosingDistanceFlag = false;
     }
 
     @PostConstruct
@@ -66,8 +75,40 @@ public class Bot extends TelegramLongPollingBot {
             String messageText = update.getMessage().getText();
             long chatId = update.getMessage().getChatId();
 
-            if (update.getMessage().hasText()) {
-                if (messageText.equals("/start")) {
+            if (update.getMessage().hasText() || update.getMessage().hasLocation()) {
+                if (update.hasMessage() && update.getMessage().hasLocation()) {
+                    removeKeyboard(chatId);
+                    handleFindRestaurantCommand(chatId);
+
+                    Location location = update.getMessage().getLocation();
+
+                    // Получаем широту и долготу
+                    Double latitude = location.getLatitude();
+                    Double longitude = location.getLongitude();
+
+                    // Отправляем сообщение с информацией о геолокации
+                    sendMessage(chatId, "Your location: " + latitude + ", " + longitude);
+
+                    locationButtonPushed(chatId);
+                }
+                else if (choosingCityFlag) {
+                    sendMessage(chatId, "You Enter - " + messageText);
+                    //System.out.println("You Enter - city");
+
+                    //1111111111тут надо его в буфер записать!!!!!!!!1
+                    this.choosingCityFlag = false;
+                }
+
+                else if (choosingDistanceFlag) {
+                    Double distance = Double.parseDouble(messageText);
+                    sendMessage(chatId, "You Enter - " + distance);
+                    //System.out.println("You Enter - distance");
+
+                    //1111111111тут надо его в буфер записать!!!!!!!!1
+                    this.choosingDistanceFlag = false;
+                }
+
+                else if (messageText.equals("/start")) {
                     sendMainMenu(chatId);
                 } else if (messageText.equals("/help")) {
                     sendHelpMessage(chatId);
@@ -89,8 +130,26 @@ public class Bot extends TelegramLongPollingBot {
                     handleViewAllergiesCommand(chatId);
                 } else if (messageText.startsWith("/delallergy")) {
                     handleDeleteAllergyCommand(chatId, messageText);
+
                 } else if (messageText.startsWith("/findrestaurant")) {
-                    handleFindRestaurantCommand(chatId, messageText);
+                    handleFindRestaurantCommand(chatId);
+
+                } else if (messageText.startsWith("Location")) {
+                    locationButtonPushed(chatId);
+                } else if (messageText.startsWith("Search Filters")) {
+                    handleOption2(chatId);
+                } else if (messageText.startsWith("Start Searching")) {
+                    handleOption3(chatId);
+
+                } else if (messageText.startsWith("Send my location")) {
+                    sendMyLocation(chatId);
+                } else if (messageText.startsWith("Choose city")) {
+                    chooseCity(chatId);
+                } else if (messageText.startsWith("Distance")) {
+                    chooseDistance(chatId);
+                } else if (messageText.startsWith("Go to Searching Menu")) {
+                    removeKeyboard(chatId);
+                    handleFindRestaurantCommand(chatId);
                 } else if (messageText.startsWith("/randomrestaurant")) {
                     handleRandomRestaurantCommand(chatId, messageText);
                 } else if (messageText.startsWith("/visitlist")) {
@@ -102,10 +161,13 @@ public class Bot extends TelegramLongPollingBot {
                 } else if (messageText.startsWith("/markvisited")) {
                     handleMarkVisitedCommand(chatId, messageText);
                 } else if (messageText.startsWith("/removevisit")) {
-                    handleRemoveVisitCommand(chatId, messageText);
-                } else {
+                    handleRemoveVisitCommand(chatId, messageText);}
+
+
+                else {
                     sendHelpSuggestion(chatId);
                 }
+
             } else {
                 sendUnsupportedMessageType(chatId);
             }
@@ -290,15 +352,103 @@ public class Bot extends TelegramLongPollingBot {
 
 
 
+    /*private void sendMainMenuWithButton(long chatId) {
+        SendMessage message = new SendMessage();
+        message.setChatId(String.valueOf(chatId));
+        message.setText("Choose how ....");
+
+        // Создание Reply-клавиатуры
+        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
+        List<KeyboardRow> keyboard = new ArrayList<>();
+
+        // Первая строка клавиатуры
+        KeyboardRow row1 = new KeyboardRow();
+        row1.add(new KeyboardButton("location"));
+        row1.add(new KeyboardButton("search filters"));
+
+        // Вторая строка клавиатуры
+        KeyboardRow row2 = new KeyboardRow();
+        row2.add(new KeyboardButton("Start searching"));
+
+        // Добавляем строки в клавиатуру
+        keyboard.add(row1);
+        keyboard.add(row2);
+
+        // Устанавливаем клавиатуру в сообщение
+        replyKeyboardMarkup.setKeyboard(keyboard);
+        replyKeyboardMarkup.setResizeKeyboard(true); // Для автоматического изменения размера
+        replyKeyboardMarkup.setOneTimeKeyboard(true); // Клавиатура не исчезает после нажатия
+        message.setReplyMarkup(replyKeyboardMarkup);
+
+        // Отправляем сообщение с клавиатурой
+        try {
+            execute(message);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }*/
+
+    private void sendCustomMenu(long chatId, List<String> buttonNames, int buttonsPerRow) {
+        SendMessage message = new SendMessage();
+        message.setChatId(String.valueOf(chatId));
+        message.setText("Choose an option:");
+
+        // Создание Reply-клавиатуры
+        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
+        List<KeyboardRow> keyboard = new ArrayList<>();
+
+        KeyboardRow row = new KeyboardRow();
+
+        for (int i = 0; i < buttonNames.size(); i++) {
+            // Если это последняя кнопка, добавляем ее в новую строку
+            if (i == buttonNames.size() - 1) {
+                // Добавляем предыдущие кнопки, если они есть
+                if (!row.isEmpty()) {
+                    keyboard.add(row);
+                }
+                // Создаем отдельную строку для последней кнопки
+                KeyboardRow lastRow = new KeyboardRow();
+                lastRow.add(new KeyboardButton(buttonNames.get(i)));
+                keyboard.add(lastRow);
+            } else {
+                row.add(new KeyboardButton(buttonNames.get(i)));
+
+                // Если количество кнопок в строке достигает buttonsPerRow, создаем новую строку
+                if ((i + 1) % buttonsPerRow == 0) {
+                    keyboard.add(row);  // Добавляем текущую строку в клавиатуру
+                    row = new KeyboardRow();  // Создаем новую строку
+                }
+            }
+        }
+
+        // Устанавливаем клавиатуру в сообщение
+        replyKeyboardMarkup.setKeyboard(keyboard);
+        replyKeyboardMarkup.setResizeKeyboard(true); // Для автоматического изменения размера
+        replyKeyboardMarkup.setOneTimeKeyboard(true); // Клавиатура исчезает после нажатия
+        message.setReplyMarkup(replyKeyboardMarkup);
+
+        // Отправляем сообщение с клавиатурой
+        try {
+            execute(message);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
 
 
-    private void handleFindRestaurantCommand(long chatId, String messageText) {
+    private void handleFindRestaurantCommand(long chatId) {
         if (!sessionService.isUserLoggedIn(chatId)) {
             sendMessage(chatId, "You are not logged in.");
             return;
         }
 
-        String[] parts = messageText.split(",", 4);
+        List<String> buttons = Arrays.asList("Location", "Search Filters", "Start Searching");
+
+        //sendMainMenuWithButton(chatId);
+        sendCustomMenu(chatId, buttons, 2); // Создает меню, где последняя кнопка всегда в новой строке
+
+
+        /*String[] parts = messageText.split(",", 4);
         if (parts.length < 2) {
             sendMessageWithMarkdown(chatId, "Invalid format. Use: /findrestaurant location, categoryID, keywords1 ... " +
                     "keywordsn, skipCategories1 ... skipCategoriesn\n\nWhere the location is a specific city, you can enter it in both Russian and English." +
@@ -330,28 +480,126 @@ public class Bot extends TelegramLongPollingBot {
                     return foursquareService.searchRestaurants(finalLocation, finalCuisine, finalKeywords, finalSkipCategories);
                 })
                 .doOnSuccess(response -> {
-                    StringBuilder responseMessage = new StringBuilder("Restaurants found:\n\n");
                     JsonNode results = response.get("results");
                     if (results.isArray() && results.size() > 0) {
                         for (JsonNode restaurant : results) {
                             String name = restaurant.get("name").asText();
                             String address = restaurant.get("location").get("formatted_address").asText();
-                            String link = "https://foursquare.com/v/" + restaurant.get("fsq_id").asText(); // Construct the link using fsq_id
-                            responseMessage.append(name).append(", ").append(address).append("\n").append("Link: ").append(link).append("\n\n");
+                            String link = "https://foursquare.com/v/" + restaurant.get("fsq_id").asText();
+
+                            // Создание сообщения с кнопкой
+                            SendMessage message1 = new SendMessage();
+                            message1.setChatId(String.valueOf(chatId));
+                            message1.setText(name + ", " + address);
+
+                            // Создание кнопки
+                            InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
+                            List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
+                            List<InlineKeyboardButton> rowInline = new ArrayList<>();
+
+                            InlineKeyboardButton button = new InlineKeyboardButton();
+                            button.setText("View Restaurant");
+                            button.setUrl(link);  // Устанавливаем ссылку на ресторан
+
+                            // Добавляем кнопку в строку
+                            rowInline.add(button);
+
+                            // Добавляем строку в список строк
+                            rowsInline.add(rowInline);
+
+                            // Устанавливаем разметку с кнопками в сообщение
+                            inlineKeyboardMarkup.setKeyboard(rowsInline);
+                            message1.setReplyMarkup(inlineKeyboardMarkup);
+
+                            // Отправляем сообщение
+                            sendAnswerMessage(message1);
                         }
                     } else {
-                        responseMessage.append("No restaurants found.");
+                        sendMessage(chatId, "No restaurants found.");
                     }
-                    sendMessage(chatId, responseMessage.toString());
                 })
                 .doOnError(throwable -> {
                     log.error("Failed to find restaurant", throwable);
                     sendMessage(chatId, "Failed to find restaurant: " + throwable.getMessage());
                 })
-                .subscribe();
+                .subscribe();*/
     }
 
 
+    private void locationButtonPushed(long chatId) {
+        removeKeyboard(chatId);
+
+        List<String> buttons = Arrays.asList("Distance", "Send my location", "Choose city", "Go to Searching Menu");
+        sendCustomMenu(chatId, buttons, 2); // Создает меню, где последняя кнопка всегда в новой строке
+    }
+
+    private void sendMyLocation(long chatId) {
+        SendMessage message = new SendMessage();
+        message.setChatId(String.valueOf(chatId));
+        message.setText("Please share your location:");
+
+        // Создание клавиатуры
+        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
+        replyKeyboardMarkup.setResizeKeyboard(true); // Для автоматического изменения размера
+        replyKeyboardMarkup.setOneTimeKeyboard(true); // Клавиатура исчезает после нажатия
+
+        // Создание строки с кнопкой
+        KeyboardRow row = new KeyboardRow();
+        KeyboardButton locationButton = new KeyboardButton("Share Location");
+        locationButton.setRequestLocation(true);  // Эта кнопка будет запрашивать геолокацию
+        row.add(locationButton);
+
+        // Добавляем строку в клавиатуру
+        List<KeyboardRow> keyboard = new ArrayList<>();
+        keyboard.add(row);
+        replyKeyboardMarkup.setKeyboard(keyboard);
+
+        // Присоединяем клавиатуру к сообщению
+        message.setReplyMarkup(replyKeyboardMarkup);
+
+        // Отправляем сообщение с клавиатурой
+        try {
+            execute(message);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void chooseCity(long chatId) {
+        sendMessage(chatId, "Write name of the City");
+        this.choosingCityFlag = true;
+    }
+
+    private void chooseDistance(long chatId) {
+        sendMessage(chatId, "Write the search radius in kilometers");
+        this.choosingDistanceFlag = true;
+    }
+
+
+
+
+    private void handleOption2(long chatId) {
+        sendMessage(chatId, "2!");
+        // Добавить любое действие для Опции 2
+        removeKeyboard(chatId);
+    }
+
+    private void handleOption3(long chatId) {
+        sendMessage(chatId, "3!");
+        // Добавить любое действие для Опции 3
+        removeKeyboard(chatId);
+    }
+
+    private void removeKeyboard(long chatId) {
+        SendMessage message = new SendMessage();
+        message.setChatId(String.valueOf(chatId));
+        //message.setText("Клавиатура убрана.");
+
+        // Создаем объект для удаления клавиатуры
+        ReplyKeyboardRemove keyboardMarkup = new ReplyKeyboardRemove();
+        keyboardMarkup.setRemoveKeyboard(true); // Устанавливаем, что нужно удалить клавиатуру
+        message.setReplyMarkup(keyboardMarkup);
+    }
 
     private void sendMessageWithMarkdown(long chatId, String text) {
         SendMessage message = new SendMessage();
@@ -413,20 +661,37 @@ public class Bot extends TelegramLongPollingBot {
 
         String[] parts = messageText.split(" ", 2);
         if (parts.length == 2) {
-            String allergy = parts[1];
+            // Разделяем аллергии по запятой
+            String[] allergies = parts[1].split(",");
+
             Long userId = sessionService.getUserId(chatId);
 
-            userService.addUserAllergy(userId, allergy)
-                    .doOnSuccess(aVoid -> sendMessage(chatId, "Allergy added successfully!"))
-                    .doOnError(throwable -> {
-                        log.error("Failed to add allergy", throwable);
-                        sendMessage(chatId, "Failed to add allergy: " + throwable.getMessage());
-                    })
-                    .subscribe();
+            for (String rawAllergy : allergies) {
+                String allergy = rawAllergy.trim(); // Убираем пробелы
+
+                // Проверка регулярным выражением: только буквы русского и английского алфавита
+                if (!allergy.matches("[a-zA-Zа-яА-Я]+")) {
+                    sendMessage(chatId, "Invalid allergy format for: " + allergy + ". Only alphabetic characters are allowed.");
+                    continue;
+                }
+
+                // Создаем финальную переменную для использования в лямбде
+                final String finalAllergy = allergy;
+
+                // Добавляем аллергию
+                userService.addUserAllergy(userId, finalAllergy)
+                        .doOnSuccess(aVoid -> sendMessage(chatId, "Allergy '" + finalAllergy + "' added successfully!"))
+                        .doOnError(throwable -> {
+                            log.error("Failed to add allergy: " + finalAllergy, throwable);
+                            sendMessage(chatId, "Failed to add allergy '" + finalAllergy + "': " + throwable.getMessage());
+                        })
+                        .subscribe();
+            }
         } else {
-            sendMessage(chatId, "Invalid format. Use: /addallergy allergy");
+            sendMessage(chatId, "Invalid format. Use: /addallergy allergy1, allergy2, ...");
         }
     }
+
 
 
 
@@ -488,20 +753,37 @@ public class Bot extends TelegramLongPollingBot {
 
         String[] parts = messageText.split(" ", 2);
         if (parts.length == 2) {
-            String preference = parts[1];
+            // Разделяем предпочтения по запятой
+            String[] preferences = parts[1].split(",");
+
             Long userId = sessionService.getUserId(chatId);
 
-            userService.addUserPreference(userId, preference)
-                    .doOnSuccess(aVoid -> sendMessage(chatId, "Preference added successfully!"))
-                    .doOnError(throwable -> {
-                        log.error("Failed to add preference", throwable);
-                        sendMessage(chatId, "Failed to add preference: " + throwable.getMessage());
-                    })
-                    .subscribe();
+            for (String rawPreference : preferences) {
+                String preference = rawPreference.trim(); // Убираем пробелы
+
+                // Проверка регулярным выражением: только буквы русского и английского алфавита
+                if (!preference.matches("[a-zA-Zа-яА-Я]+")) {
+                    sendMessage(chatId, "Invalid preference format for: " + preference + ". Only alphabetic characters are allowed.");
+                    continue;
+                }
+
+                // Создаем финальную переменную для использования в лямбде
+                final String finalPreference = preference;
+
+                // Добавляем предпочтение
+                userService.addUserPreference(userId, finalPreference)
+                        .doOnSuccess(aVoid -> sendMessage(chatId, "Preference '" + finalPreference + "' added successfully!"))
+                        .doOnError(throwable -> {
+                            log.error("Failed to add preference: " + finalPreference, throwable);
+                            sendMessage(chatId, "Failed to add preference '" + finalPreference + "': " + throwable.getMessage());
+                        })
+                        .subscribe();
+            }
         } else {
-            sendMessage(chatId, "Invalid format. Use: /addpref preference");
+            sendMessage(chatId, "Invalid format. Use: /addpref preference1, preference2, ...");
         }
     }
+
 
     private void handleViewPreferencesCommand(long chatId) {
         if (!sessionService.isUserLoggedIn(chatId)) {
