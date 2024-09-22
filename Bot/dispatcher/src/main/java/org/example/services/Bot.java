@@ -46,6 +46,13 @@ public class Bot extends TelegramLongPollingBot {
     private Boolean enterSortByFlag;
     private Boolean enterPricePolicyFlag;
     private Boolean enterOpenNowFlag;
+    private Boolean addAllergyFlag;
+    private Boolean delAllergyFlag;
+    private Boolean addPrefFlag;
+    private Boolean delPrefFlag;
+    private Boolean addVisitFlag;
+    private Boolean markVisitedFlag;
+    private Boolean removevisitFlag;
 
 
     @Autowired
@@ -64,6 +71,15 @@ public class Bot extends TelegramLongPollingBot {
         this.enterSortByFlag = false;
         this.enterPricePolicyFlag = false;
         this.enterOpenNowFlag = false;
+
+        this.addAllergyFlag = false;
+        this.delAllergyFlag = false;
+        this.addPrefFlag = false;
+        this.delPrefFlag = false;
+
+        this.addVisitFlag = false;
+        this.markVisitedFlag = false;
+        this.removevisitFlag = false;
     }
 
     @PostConstruct
@@ -150,18 +166,53 @@ public class Bot extends TelegramLongPollingBot {
                     handleLoginCommand(chatId, messageText);
                 } else if (messageText.startsWith("/logout")) {
                     handleLogoutCommand(chatId);
-                } else if (messageText.startsWith("/addpref")) {
+                }  else if (messageText.startsWith("/viewprefs")) {
+                    handleViewPreferencesCommand(chatId);}
+
+
+                else if (messageText.startsWith("/addpref")) {
+                    sendMessage(chatId, "If there are many preferences to add, you must enter them separated by commas." +
+                            "\nExample: coffee, tea, ...");
+                    this.addPrefFlag = true;}
+
+                else if (addPrefFlag) {
+                    this.addPrefFlag = false;
                     handleAddPreferenceCommand(chatId, messageText);
-                } else if (messageText.startsWith("/viewprefs")) {
-                    handleViewPreferencesCommand(chatId);
-                } else if (messageText.startsWith("/delpref")) {
+                }
+
+                else if (messageText.startsWith("/delpref")) {
+                    sendMessage(chatId, "If there are many preferences to delete, you must enter them separated by commas." +
+                            "\nExample: coffee, tea, ...");
+                    this.delPrefFlag = true;}
+
+                else if (delPrefFlag) {
+                    this.delPrefFlag = false;
                     handleDeletePreferenceCommand(chatId, messageText);
-                } else if (messageText.startsWith("/addallergy")) {
+                }
+
+
+                else if (messageText.startsWith("/addallergy")) {
+                    sendMessage(chatId, "If there are many allergies to add, you must enter them separated by commas." +
+                            "\nExample: tomatoes, strawberry, ...");
+                    this.addAllergyFlag = true;}
+
+                else if (addAllergyFlag) {
+                    this.addAllergyFlag = false;
                     handleAddAllergyCommand(chatId, messageText);
-                } else if (messageText.startsWith("/viewallergies")) {
-                    handleViewAllergiesCommand(chatId);
-                } else if (messageText.startsWith("/delallergy")) {
+                }
+
+                else if (messageText.startsWith("/delallergy")) {
+                    sendMessage(chatId, "If there are many allergies to delete, you must enter them separated by commas." +
+                            "\nExample: tomatoes, strawberry, ...");
+                    this.delAllergyFlag = true;}
+
+                else if (delAllergyFlag) {
+                    this.delAllergyFlag = false;
                     handleDeleteAllergyCommand(chatId, messageText);
+                }
+
+                else if (messageText.startsWith("/viewallergies")) {
+                    handleViewAllergiesCommand(chatId);
 
                 } else if (messageText.startsWith("/findrestaurant")) {
                     handleFindRestaurantCommand(chatId);
@@ -230,17 +281,41 @@ public class Bot extends TelegramLongPollingBot {
 
                 else if (messageText.startsWith("/randomrestaurant")) {
                     handleRandomRestaurantCommand(chatId, messageText);
+
+
                 } else if (messageText.startsWith("/visitlist")) {
                     handleVisitListCommand(chatId);
-                } else if (messageText.startsWith("/addvisit")) {
-                    handleAddVisitCommand(chatId, messageText);
-                } else if (messageText.startsWith("/showlist")) {
+                }
+                else if (messageText.startsWith("/showlist")) {
                     handleShowListCommand(chatId);
-                } else if (messageText.startsWith("/markvisited")) {
-                    handleMarkVisitedCommand(chatId, messageText);
-                } else if (messageText.startsWith("/removevisit")) {
-                    handleRemoveVisitCommand(chatId, messageText);}
+                }
 
+                else if (messageText.startsWith("/addvisit")) {
+                    sendMessage(chatId, "You need to enter places one at a time!");
+                    this.addVisitFlag = true;}
+
+                else if (addVisitFlag) {
+                    this.addVisitFlag = false;
+                    handleAddVisitCommand(chatId, messageText);
+                }
+
+                else if (messageText.startsWith("/markvisited")) {
+                    sendMessage(chatId, "You need to enter places one at a time!");
+                    this.markVisitedFlag = true;}
+
+                else if (markVisitedFlag) {
+                    this.markVisitedFlag = false;
+                    handleMarkVisitedCommand(chatId, messageText);
+                }
+
+                else if (messageText.startsWith("/removevisit")) {
+                    sendMessage(chatId, "You need to enter places one at a time!");
+                    this.removevisitFlag = true;}
+
+                else if (removevisitFlag) {
+                    this.removevisitFlag = false;
+                    handleRemoveVisitCommand(chatId, messageText);
+                }
 
                 else {
                     sendHelpSuggestion(chatId);
@@ -275,7 +350,7 @@ public class Bot extends TelegramLongPollingBot {
                 "/addallergy [allergy] - Add a new allergy\n" +
                 "/viewallergies - View your allergies\n" +
                 "/delallergy [allergy] - Delete an allergy\n" +
-                "/findrestaurant [location], [categoryID], [keywords], [skipCategories] - Find a restaurant\n" +
+                "/findrestaurant - Find a restaurant\n" +
                 "/randomrestaurant [location] [radius] - Find a random restaurant\n" +
                 "/visitlist - Show visit-related commands\n" +
                 "/addvisit [restaurant_id] - Add a restaurant to your visit list\n" +
