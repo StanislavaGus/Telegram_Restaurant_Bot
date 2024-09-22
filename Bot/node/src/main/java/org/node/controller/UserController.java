@@ -37,9 +37,14 @@ public class UserController {
 
     @GetMapping("/searchRestaurants")
     public Mono<JsonNode> searchRestaurants(@RequestParam String location,
-                                            @RequestParam(required = false) String cuisine,
                                             @RequestParam(required = false) String keywords,
-                                            @RequestParam(required = false, defaultValue = "") String skip) {
-        return foursquareService.searchRestaurants(location, cuisine, keywords, skip);
+                                            @RequestParam(required = false, defaultValue = "RELEVANCE") String sort,
+                                            @RequestParam(required = false, defaultValue = "false") Boolean openNow,
+                                            @RequestParam(required = false, defaultValue = "4") Integer maxPrice,
+                                            @RequestParam(required = false) Double latitude,
+                                            @RequestParam(required = false) Double longitude) {
+        // Вызываем метод сервиса с обновленными параметрами
+        return foursquareService.searchRestaurants(location, keywords, sort, openNow, maxPrice, latitude, longitude);
     }
+
 }

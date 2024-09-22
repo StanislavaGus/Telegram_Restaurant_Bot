@@ -34,8 +34,8 @@ public class UserService {
         this.foursquareService = foursquareService;
     }
 
-    public Mono<JsonNode> findRestaurant(String location, String cuisine, String keywords, String skipCategories) {
-        return foursquareService.searchRestaurants(location, cuisine, keywords, skipCategories);
+    public Mono<JsonNode> findRestaurant(String location, String keywords, String sort, Boolean openNow, Integer maxPrice, Double latitude, Double longitude) {
+        return foursquareService.searchRestaurants(location, keywords, sort, openNow, maxPrice, latitude, longitude);
     }
 
     public Mono<JsonNode> requestRandomRestaurant(String location, String area) {
