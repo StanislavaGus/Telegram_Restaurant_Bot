@@ -12,6 +12,18 @@ public class User {
     private String password;
     private String email;
 
+    // Конструктор без параметров (нужен для Spring и фреймворков)
+    public User() {
+    }
+
+    // Полный конструктор
+    public User(Long id, String username, String password, String email) {
+        this.id = id;
+        this.username = username;
+        this.password = password;
+        this.email = email;
+    }
+
     // Getters and setters
     public Long getId() {
         return id;

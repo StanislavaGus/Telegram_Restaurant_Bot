@@ -25,21 +25,41 @@ public class FoursquareService {
         this.apiKey = apiKey;
     }
 
-    public Mono<JsonNode> searchRestaurants(String location, String cuisine, String keywords, String skipCategories) {
+    public Mono<JsonNode> searchRestaurants(String location, String keywords, String sort, Boolean openNow, Integer maxPrice, Double latitude, Double longitude) {
         return Mono.fromCallable(() -> {
-            StringBuilder urlBuilder = new StringBuilder("https://api.foursquare.com/v3/places/search?query=restaurant&near=")
-                    .append(location);
-            if (cuisine != null && !cuisine.isEmpty()) {
-                urlBuilder.append("&categories=").append(cuisine);
-            }
-            if (keywords != null && !keywords.isEmpty()) {
-                urlBuilder.append("&keywords=").append(keywords);
-            }
-            if (skipCategories != null && !skipCategories.isEmpty()) {
-                urlBuilder.append("&exclude_categories=").append(skipCategories);
-            }
-            urlBuilder.append("&limit=10");
+            StringBuilder urlBuilder = new StringBuilder("https://api.foursquare.com/v3/places/search?query=");
 
+            if (keywords != null && !keywords.isEmpty()) {
+                urlBuilder.append(keywords);
+            } else {
+                urlBuilder.append("restaurant"); // Если ключевые слова не заданы, используем стандартное значение
+            }
+
+            if (location != null && !location.isEmpty()) {
+                urlBuilder.append("&near=").append(location);
+            }
+
+            if (openNow != null) {
+                urlBuilder.append("&open_now=").append(openNow);
+            }
+
+            if (sort != null && !sort.isEmpty()) {
+                urlBuilder.append("&sort=").append(sort);
+            }
+
+            urlBuilder.append("&min_price=1"); // Минимальная цена зафиксирована
+
+            if (maxPrice != null) {
+                urlBuilder.append("&max_price=").append(maxPrice);
+            }
+
+            if (latitude != null && longitude != null) {
+                urlBuilder.append("&ll=").append(latitude).append(",").append(longitude);
+            }
+
+            urlBuilder.append("&limit=5");
+
+            // Добавляем авторизационный ключ и выполняем запрос
             Request request = new Request.Builder()
                     .url(urlBuilder.toString())
                     .addHeader("Authorization", apiKey)
@@ -54,6 +74,7 @@ public class FoursquareService {
             }
         });
     }
+
 
     public Mono<JsonNode> searchRandomRestaurant(String location, String radius) {
         return Mono.fromCallable(() -> {

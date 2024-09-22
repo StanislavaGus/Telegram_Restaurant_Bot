@@ -12,17 +12,19 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.Location;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardRemove;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.PostConstruct;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 @Component
 @Log4j2
@@ -34,6 +36,16 @@ public class Bot extends TelegramLongPollingBot {
     private final UserService userService;
     private final SessionService sessionService;
     private final FoursquareService foursquareService;
+    private Boolean choosingCityFlag;
+    private Boolean choosingDistanceFlag;
+    private Boolean enterPrefencesFlag;
+    private Boolean enterAllergyFlag;
+    private Boolean enterSortByFlag;
+    private Boolean enterPricePolicyFlag;
+    private Boolean enterOpenNowFlag;
+    // Для хранения параметров поиска пользователей
+    private final Map<Long, SearchParameters> userSearchParameters = new HashMap<>();
+
 
     @Autowired
     public Bot(BotConfiguration botConfig, AnnotationConfigApplicationContext context, UpdateController updateController, UserService userService, SessionService sessionService, FoursquareService foursquareService) {
@@ -43,6 +55,14 @@ public class Bot extends TelegramLongPollingBot {
         this.userService = userService;
         this.sessionService = sessionService;
         this.foursquareService = foursquareService;
+        this.choosingCityFlag = false;
+        this.choosingDistanceFlag = false;
+
+        this.enterPrefencesFlag = false;
+        this.enterAllergyFlag = false;
+        this.enterSortByFlag = false;
+        this.enterPricePolicyFlag = false;
+        this.enterOpenNowFlag = false;
     }
 
     @PostConstruct
@@ -66,8 +86,86 @@ public class Bot extends TelegramLongPollingBot {
             String messageText = update.getMessage().getText();
             long chatId = update.getMessage().getChatId();
 
-            if (update.getMessage().hasText()) {
-                if (messageText.equals("/start")) {
+            if (update.getMessage().hasText() || update.getMessage().hasLocation()) {
+                if (update.hasMessage() && update.getMessage().hasLocation()) {
+                    removeKeyboard(chatId);
+                    handleFindRestaurantCommand(chatId);
+
+                    Location location = update.getMessage().getLocation();
+
+                    // Получаем широту и долготу
+                    Double latitude = location.getLatitude();
+                    Double longitude = location.getLongitude();
+
+                    // Получаем или создаем новый объект SearchParameters для пользователя
+                    SearchParameters params = userSearchParameters.computeIfAbsent(chatId, k -> new SearchParameters());
+
+                    // Сохраняем координаты для буферизации
+                    params.setLatitude(latitude);
+                    params.setLongitude(longitude);
+
+                    // Отправляем сообщение с информацией о геолокации
+                    sendMessage(chatId, "Your location: " + latitude + ", " + longitude);
+
+                    locationButtonPushed(chatId);
+                }
+                else if (choosingCityFlag) {
+                    sendMessage(chatId, "You Enter - " + messageText);
+                    SearchParameters params = userSearchParameters.computeIfAbsent(chatId, k -> new SearchParameters());
+
+                    // Сохраняем город для буферизации
+                    params.setNear(messageText);
+                    this.choosingCityFlag = false;
+                }
+
+                else if (choosingDistanceFlag) {
+                    Double distance = Double.parseDouble(messageText);
+                    sendMessage(chatId, "You Enter - " + distance +"m");
+
+                    SearchParameters params = userSearchParameters.computeIfAbsent(chatId, k -> new SearchParameters());
+
+                    params.setArea(distance);
+                    this.choosingDistanceFlag = false;
+                }
+
+                else if (enterPrefencesFlag) {
+                    sendMessage(chatId, "You Enter - " + messageText);
+
+                    this.enterPrefencesFlag = false;
+                    String cleanedInput = messageText.replaceAll("[^a-zA-Z,]", "");
+
+
+                    SearchParameters params = userSearchParameters.computeIfAbsent(chatId, k -> new SearchParameters());
+
+                    // Добавляем новые предпочтения к полю query
+                    String currentQuery = params.getQuery();
+                    if (currentQuery == null || currentQuery.isEmpty()) {
+                        params.setQuery(cleanedInput); // Если query еще пусто, то просто задаем новое значение
+                    } else {
+                        params.setQuery(currentQuery + "," + cleanedInput); // Если есть значение, добавляем новое через запятую
+                    }
+
+                }
+
+                else if (enterAllergyFlag) {
+                    sendMessage(chatId, "You Enter - " + messageText);
+
+                    this.enterAllergyFlag = false;
+                    String cleanedInput = messageText.replaceAll("[^a-zA-Z,]", "");
+
+                    SearchParameters params = userSearchParameters.computeIfAbsent(chatId, k -> new SearchParameters());
+
+                    // Добавляем новые аллергии к полю allergy
+                    String currentAllergy = params.getAllergy();
+                    if (currentAllergy == null || currentAllergy.isEmpty()) {
+                        params.setAllergy(cleanedInput); // Если allergy еще пусто, то просто задаем новое значение
+                    } else {
+                        params.setAllergy(currentAllergy + "," + cleanedInput); // Если есть значение, добавляем новое через запятую
+                    }
+
+                }
+
+                else if (messageText.equals("/start")) {
                     sendMainMenu(chatId);
                 } else if (messageText.equals("/help")) {
                     sendHelpMessage(chatId);
@@ -89,9 +187,85 @@ public class Bot extends TelegramLongPollingBot {
                     handleViewAllergiesCommand(chatId);
                 } else if (messageText.startsWith("/delallergy")) {
                     handleDeleteAllergyCommand(chatId, messageText);
+
                 } else if (messageText.startsWith("/findrestaurant")) {
-                    handleFindRestaurantCommand(chatId, messageText);
-                } else if (messageText.startsWith("/randomrestaurant")) {
+                    handleFindRestaurantCommand(chatId);
+
+                } else if (messageText.startsWith("Location")) {
+                    locationButtonPushed(chatId);
+                } else if (messageText.startsWith("Search Filters")) {
+                    searchFiltersButtonPushed(chatId);
+                } else if (messageText.startsWith("Start Searching")) {
+                    startSearching(chatId);
+
+                } else if (messageText.startsWith("Send my location")) {
+                    sendMyLocation(chatId);
+                } else if (messageText.startsWith("Choose city")) {
+                    chooseCity(chatId);
+                } else if (messageText.startsWith("Distance")) {
+                    chooseDistance(chatId);
+                } else if (messageText.startsWith("Go to Searching Menu")) {
+                    removeKeyboard(chatId);
+                    handleFindRestaurantCommand(chatId);}
+
+
+                else if (messageText.startsWith("Preferences")) {
+                    preferences(chatId);}
+                else if (messageText.startsWith("Allergy")) {
+                    allergy(chatId);}
+
+
+                else if (messageText.startsWith("Sort by")) {
+                    sortBy(chatId);}
+
+                else if (messageText.matches("^/(relevance|rating|distance|popularity)$") && enterSortByFlag) {
+
+                    this.enterSortByFlag = false;
+                    String cleanedInput = messageText.replaceAll("[/]", "").toUpperCase();
+
+                    sendMessage(chatId, "You Enter - " + cleanedInput);
+
+                    SearchParameters params = userSearchParameters.computeIfAbsent(chatId, k -> new SearchParameters());
+
+                    params.setSort(cleanedInput);
+
+                }
+
+                else if (messageText.startsWith("Pricing policy")) {
+                    pricingPolicy(chatId);}
+
+                else if (messageText.matches("^/[1-4]$") && enterPricePolicyFlag) {
+                    this.enterPricePolicyFlag = false;
+                    String cleanedInput = messageText.replaceAll("[/]", "");
+
+                    sendMessage(chatId, "You Enter - " + cleanedInput);
+
+                    Integer maxPrice = Integer.parseInt(cleanedInput);
+
+                    SearchParameters params = userSearchParameters.computeIfAbsent(chatId, k -> new SearchParameters());
+
+                    params.setMaxPrice(maxPrice);
+                }
+
+                //"Open Now"
+                else if (messageText.startsWith("Open Now")) {
+                    openNow(chatId);}
+
+                else if (messageText.matches("^/(yes|no)$") && enterOpenNowFlag) {
+                    this.enterOpenNowFlag = false;
+
+                    String cleanedInput = messageText.replaceAll("[/]", "");
+                    Boolean result = cleanedInput.equals("yes");
+
+                    sendMessage(chatId, "You Enter - " + result);
+
+                    SearchParameters params = userSearchParameters.computeIfAbsent(chatId, k -> new SearchParameters());
+
+                    params.setOpenNow(result);
+                }
+
+
+                else if (messageText.startsWith("/randomrestaurant")) {
                     handleRandomRestaurantCommand(chatId, messageText);
                 } else if (messageText.startsWith("/visitlist")) {
                     handleVisitListCommand(chatId);
@@ -102,10 +276,13 @@ public class Bot extends TelegramLongPollingBot {
                 } else if (messageText.startsWith("/markvisited")) {
                     handleMarkVisitedCommand(chatId, messageText);
                 } else if (messageText.startsWith("/removevisit")) {
-                    handleRemoveVisitCommand(chatId, messageText);
-                } else {
+                    handleRemoveVisitCommand(chatId, messageText);}
+
+
+                else {
                     sendHelpSuggestion(chatId);
                 }
+
             } else {
                 sendUnsupportedMessageType(chatId);
             }
@@ -288,70 +465,222 @@ public class Bot extends TelegramLongPollingBot {
         }
     }
 
+    private void sendCustomMenu(long chatId, List<String> buttonNames, int buttonsPerRow) {
+        SendMessage message = new SendMessage();
+        message.setChatId(String.valueOf(chatId));
+        message.setText("Choose an option:");
 
+        // Создание Reply-клавиатуры
+        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
+        List<KeyboardRow> keyboard = new ArrayList<>();
 
+        KeyboardRow row = new KeyboardRow();
 
+        for (int i = 0; i < buttonNames.size(); i++) {
+            // Если это последняя кнопка, добавляем ее в новую строку
+            if (i == buttonNames.size() - 1) {
+                // Добавляем предыдущие кнопки, если они есть
+                if (!row.isEmpty()) {
+                    keyboard.add(row);
+                }
+                // Создаем отдельную строку для последней кнопки
+                KeyboardRow lastRow = new KeyboardRow();
+                lastRow.add(new KeyboardButton(buttonNames.get(i)));
+                keyboard.add(lastRow);
+            } else {
+                row.add(new KeyboardButton(buttonNames.get(i)));
 
-    private void handleFindRestaurantCommand(long chatId, String messageText) {
+                // Если количество кнопок в строке достигает buttonsPerRow, создаем новую строку
+                if ((i + 1) % buttonsPerRow == 0) {
+                    keyboard.add(row);  // Добавляем текущую строку в клавиатуру
+                    row = new KeyboardRow();  // Создаем новую строку
+                }
+            }
+        }
+
+        // Устанавливаем клавиатуру в сообщение
+        replyKeyboardMarkup.setKeyboard(keyboard);
+        replyKeyboardMarkup.setResizeKeyboard(true); // Для автоматического изменения размера
+        replyKeyboardMarkup.setOneTimeKeyboard(true); // Клавиатура исчезает после нажатия
+        message.setReplyMarkup(replyKeyboardMarkup);
+
+        // Отправляем сообщение с клавиатурой
+        try {
+            execute(message);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void handleFindRestaurantCommand(long chatId) {
         if (!sessionService.isUserLoggedIn(chatId)) {
             sendMessage(chatId, "You are not logged in.");
             return;
         }
 
-        String[] parts = messageText.split(",", 4);
-        if (parts.length < 2) {
-            sendMessageWithMarkdown(chatId, "Invalid format. Use: /findrestaurant location, categoryID, keywords1 ... " +
-                    "keywordsn, skipCategories1 ... skipCategoriesn\n\nWhere the location is a specific city, you can enter it in both Russian and English." +
-                    "\n\nWhere the categoryID is specified in the format of the number" +
-                    " 1300-13392.\n\nThe breakdown of the categories can be viewed on the [website](https://docs.foursquare.com/data-products/docs/categories).");
-            return;
+        List<String> buttons = Arrays.asList("Location", "Search Filters", "Start Searching");
+
+        //sendMainMenuWithButton(chatId);
+        sendCustomMenu(chatId, buttons, 2); // Создает меню, где последняя кнопка всегда в новой строке
+
+    }
+
+
+    private void locationButtonPushed(long chatId) {
+        removeKeyboard(chatId);
+
+        List<String> buttons = Arrays.asList("Distance", "Send my location", "Choose city", "Go to Searching Menu");
+        sendCustomMenu(chatId, buttons, 2); // Создает меню, где последняя кнопка всегда в новой строке
+    }
+
+    private void sendMyLocation(long chatId) {
+        SendMessage message = new SendMessage();
+        message.setChatId(String.valueOf(chatId));
+        message.setText("Please share your location:");
+
+        // Создание клавиатуры
+        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
+        replyKeyboardMarkup.setResizeKeyboard(true); // Для автоматического изменения размера
+        replyKeyboardMarkup.setOneTimeKeyboard(true); // Клавиатура исчезает после нажатия
+
+        // Создание строки с кнопкой
+        KeyboardRow row = new KeyboardRow();
+        KeyboardButton locationButton = new KeyboardButton("Share Location");
+        locationButton.setRequestLocation(true);  // Эта кнопка будет запрашивать геолокацию
+        row.add(locationButton);
+
+        // Добавляем строку в клавиатуру
+        List<KeyboardRow> keyboard = new ArrayList<>();
+        keyboard.add(row);
+        replyKeyboardMarkup.setKeyboard(keyboard);
+
+        // Присоединяем клавиатуру к сообщению
+        message.setReplyMarkup(replyKeyboardMarkup);
+
+        // Отправляем сообщение с клавиатурой
+        try {
+            execute(message);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
         }
+    }
 
-        String location = parts[0].trim();
-        String cuisine = parts.length >= 2 ? parts[1].trim() : "";
-        String keywords = parts.length >= 3 ? parts[2].trim() : "";
-        String skipCategories = parts.length == 4 ? parts[3].trim() : "";
+    private void chooseCity(long chatId) {
+        sendMessage(chatId, "Write name of the City");
+        this.choosingCityFlag = true;
+    }
 
-        final String finalLocation = location;
-        final String finalCuisine = cuisine;
+    private void chooseDistance(long chatId) {
+        sendMessage(chatId, "Write the search radius in kilometers");
+        this.choosingDistanceFlag = true;
+    }
+
+
+    private void searchFiltersButtonPushed(long chatId) {
+        removeKeyboard(chatId);
+
+        List<String> buttons = Arrays.asList("Preferences", "Allergy", "Sort by","Pricing policy",
+                "Open Now", "Go to Searching Menu");
+        sendCustomMenu(chatId, buttons, 3);
+    }
+
+
+
+    private void preferences(long chatId) {
+        sendMessage(chatId, "If there are many preferences, you must enter them separated by commas." +
+                "\nExample: coffee, tea, ...");
+        this.enterPrefencesFlag = true;
+    }
+    private void allergy(long chatId) {
+        sendMessage(chatId, "If there are many allergies, you must enter them separated by commas." +
+                "\nExample: tomatoes, strawberry, ...");
+        this.enterAllergyFlag = true;
+    }
+
+    private void sortBy(long chatId) {
+        sendMessage(chatId, "Select the option to sort:" +
+                "\n  /relevance\n  /rating\n  /distance\n  /popularity");
+        this.enterSortByFlag = true;
+    }
+
+    private void pricingPolicy(long chatId) {
+        sendMessage(chatId, "Select the option from Prising List:" +
+                "\n  /1 - \uD83D\uDCB0 \n  /2 - \uD83D\uDCB0\uD83D\uDCB0 \n  " +
+                "/3 - \uD83D\uDCB0\uD83D\uDCB0\uD83D\uDCB0 \n  /4 - \uD83D\uDCB0\uD83D\uDCB0\uD83D\uDCB0\uD83D\uDCB0");
+        this.enterPricePolicyFlag = true;
+    }
+
+    private void openNow(long chatId) {
+        sendMessage(chatId, "Is it important for you that the restaurant is open right now" +
+                "\n  /yes \n  /no");
+        this.enterOpenNowFlag = true;
+    }
+
+
+    private void startSearching(long chatId) {
+        sendMessage(chatId, "Results:");
+
+        // Получаем параметры поиска пользователя из буфера
+        SearchParameters params = userSearchParameters.get(chatId);
 
         Long userId = sessionService.getUserId(chatId);
+
         Mono<List<String>> preferencesMono = userService.getUserPreferences(userId).collectList();
-        Mono<List<String>> allergiesMono = userService.getUserAllergies(userId).collectList();
 
-        Mono.zip(preferencesMono, allergiesMono)
-                .flatMap(tuple -> {
-                    List<String> preferences = tuple.getT1();
-                    List<String> allergies = tuple.getT2();
+        preferencesMono
+                .flatMap(preferences -> {
+                    String keywords = params.getQuery();
+                    if (keywords.isEmpty() && !preferences.isEmpty()) {
+                        keywords = String.join(",", preferences); // Вставляем предпочтения пользователя
+                    }
 
-                    final String finalKeywords = keywords.isEmpty() && !preferences.isEmpty() ? String.join(",", preferences) : keywords;
-                    final String finalSkipCategories = skipCategories.isEmpty() && !allergies.isEmpty() ? String.join(",", allergies) : skipCategories;
+                    String location = params.getNear();
+                    String sort = params.getSort();
+                    Boolean openNow = params.getOpenNow();
+                    Integer maxPrice = params.getMaxPrice();
+                    Double latitude = params.getLatitude();
+                    Double longitude = params.getLongitude();
 
-                    return foursquareService.searchRestaurants(finalLocation, finalCuisine, finalKeywords, finalSkipCategories);
+                    return foursquareService.searchRestaurants(location, keywords, sort, openNow, maxPrice, latitude, longitude);
                 })
                 .doOnSuccess(response -> {
-                    StringBuilder responseMessage = new StringBuilder("Restaurants found:\n\n");
                     JsonNode results = response.get("results");
                     if (results.isArray() && results.size() > 0) {
                         for (JsonNode restaurant : results) {
                             String name = restaurant.get("name").asText();
                             String address = restaurant.get("location").get("formatted_address").asText();
-                            String link = "https://foursquare.com/v/" + restaurant.get("fsq_id").asText(); // Construct the link using fsq_id
-                            responseMessage.append(name).append(", ").append(address).append("\n").append("Link: ").append(link).append("\n\n");
+                            String link = "https://foursquare.com/v/" + restaurant.get("fsq_id").asText();
+
+                            // Отправка данных ресторана пользователю
+                            sendMessage(chatId, name + " - " + address + "\n" + link);
                         }
                     } else {
-                        responseMessage.append("No restaurants found.");
+                        sendMessage(chatId, "No restaurants found.");
                     }
-                    sendMessage(chatId, responseMessage.toString());
                 })
                 .doOnError(throwable -> {
-                    log.error("Failed to find restaurant", throwable);
-                    sendMessage(chatId, "Failed to find restaurant: " + throwable.getMessage());
+                    log.error("Failed to find restaurants", throwable);
+                    if (throwable.getMessage().contains("400")) {
+                        sendMessage(chatId, "No restaurants found. Please check your query or try again with different parameters.");
+                    } else {
+                        sendMessage(chatId, "Failed to find restaurants.");
+                    }
                 })
                 .subscribe();
+
+        removeKeyboard(chatId);
     }
 
+    private void removeKeyboard(long chatId) {
+        SendMessage message = new SendMessage();
+        message.setChatId(String.valueOf(chatId));
+        //message.setText("Клавиатура убрана.");
 
+        // Создаем объект для удаления клавиатуры
+        ReplyKeyboardRemove keyboardMarkup = new ReplyKeyboardRemove();
+        keyboardMarkup.setRemoveKeyboard(true); // Устанавливаем, что нужно удалить клавиатуру
+        message.setReplyMarkup(keyboardMarkup);
+    }
 
     private void sendMessageWithMarkdown(long chatId, String text) {
         SendMessage message = new SendMessage();
@@ -363,7 +692,7 @@ public class Bot extends TelegramLongPollingBot {
 
 
     private void handleRandomRestaurantCommand(long chatId, String messageText) {
-        if (!sessionService.isUserLoggedIn(chatId)) {
+        /* if (!sessionService.isUserLoggedIn(chatId)) {
             sendMessage(chatId, "You are not logged in.");
             return;
         }
@@ -401,7 +730,7 @@ public class Bot extends TelegramLongPollingBot {
                     .subscribe();
         } else {
             sendMessage(chatId, "Invalid format. Use: /randomrestaurant location radius");
-        }
+        }*/
     }
 
 
@@ -413,20 +742,37 @@ public class Bot extends TelegramLongPollingBot {
 
         String[] parts = messageText.split(" ", 2);
         if (parts.length == 2) {
-            String allergy = parts[1];
+            // Разделяем аллергии по запятой
+            String[] allergies = parts[1].split(",");
+
             Long userId = sessionService.getUserId(chatId);
 
-            userService.addUserAllergy(userId, allergy)
-                    .doOnSuccess(aVoid -> sendMessage(chatId, "Allergy added successfully!"))
-                    .doOnError(throwable -> {
-                        log.error("Failed to add allergy", throwable);
-                        sendMessage(chatId, "Failed to add allergy: " + throwable.getMessage());
-                    })
-                    .subscribe();
+            for (String rawAllergy : allergies) {
+                String allergy = rawAllergy.trim(); // Убираем пробелы
+
+                // Проверка регулярным выражением: только буквы русского и английского алфавита
+                if (!allergy.matches("[a-zA-Zа-яА-Я]+")) {
+                    sendMessage(chatId, "Invalid allergy format for: " + allergy + ". Only alphabetic characters are allowed.");
+                    continue;
+                }
+
+                // Создаем финальную переменную для использования в лямбде
+                final String finalAllergy = allergy;
+
+                // Добавляем аллергию
+                userService.addUserAllergy(userId, finalAllergy)
+                        .doOnSuccess(aVoid -> sendMessage(chatId, "Allergy '" + finalAllergy + "' added successfully!"))
+                        .doOnError(throwable -> {
+                            log.error("Failed to add allergy: " + finalAllergy, throwable);
+                            sendMessage(chatId, "Failed to add allergy '" + finalAllergy + "': " + throwable.getMessage());
+                        })
+                        .subscribe();
+            }
         } else {
-            sendMessage(chatId, "Invalid format. Use: /addallergy allergy");
+            sendMessage(chatId, "Invalid format. Use: /addallergy allergy1, allergy2, ...");
         }
     }
+
 
 
 
@@ -462,21 +808,31 @@ public class Bot extends TelegramLongPollingBot {
 
         String[] parts = messageText.split(" ", 2);
         if (parts.length == 2) {
-            String allergy = parts[1];
+            // Разделяем аллергии по запятой
+            String[] allergiesArray = parts[1].split(",");
+
             Long userId = sessionService.getUserId(chatId);
 
-            userService.deleteUserAllergy(userId, allergy)
-                    .then(Mono.just("Allergy deleted successfully!"))
-                    .doOnSuccess(response -> sendMessage(chatId, response))
-                    .doOnError(throwable -> {
-                        log.error("Failed to delete allergy", throwable);
-                        sendMessage(chatId, "Failed to delete allergy: " + throwable.getMessage());
-                    })
-                    .subscribe();
+            for (String rawAllergy : allergiesArray) {
+                String allergy = rawAllergy.trim(); // Убираем пробелы
+
+                // Создаем финальную переменную для использования в лямбде
+                final String finalAllergy = allergy;
+
+                // Удаляем аллергию
+                userService.deleteUserAllergy(userId, finalAllergy)
+                        .doOnSuccess(aVoid -> sendMessage(chatId, "Allergy '" + finalAllergy + "' deleted successfully!"))
+                        .doOnError(throwable -> {
+                            log.error("Failed to delete allergy: " + finalAllergy, throwable);
+                            sendMessage(chatId, "Failed to delete allergy '" + finalAllergy + "': " + throwable.getMessage());
+                        })
+                        .subscribe();
+            }
         } else {
-            sendMessage(chatId, "Invalid format. Use: /delallergy allergy");
+            sendMessage(chatId, "Invalid format. Use: /delallergy allergy1, allergy2, ...");
         }
     }
+
 
 
 
@@ -488,20 +844,37 @@ public class Bot extends TelegramLongPollingBot {
 
         String[] parts = messageText.split(" ", 2);
         if (parts.length == 2) {
-            String preference = parts[1];
+            // Разделяем предпочтения по запятой
+            String[] preferences = parts[1].split(",");
+
             Long userId = sessionService.getUserId(chatId);
 
-            userService.addUserPreference(userId, preference)
-                    .doOnSuccess(aVoid -> sendMessage(chatId, "Preference added successfully!"))
-                    .doOnError(throwable -> {
-                        log.error("Failed to add preference", throwable);
-                        sendMessage(chatId, "Failed to add preference: " + throwable.getMessage());
-                    })
-                    .subscribe();
+            for (String rawPreference : preferences) {
+                String preference = rawPreference.trim(); // Убираем пробелы
+
+                // Проверка регулярным выражением: только буквы русского и английского алфавита
+                if (!preference.matches("[a-zA-Zа-яА-Я]+")) {
+                    sendMessage(chatId, "Invalid preference format for: " + preference + ". Only alphabetic characters are allowed.");
+                    continue;
+                }
+
+                // Создаем финальную переменную для использования в лямбде
+                final String finalPreference = preference;
+
+                // Добавляем предпочтение
+                userService.addUserPreference(userId, finalPreference)
+                        .doOnSuccess(aVoid -> sendMessage(chatId, "Preference '" + finalPreference + "' added successfully!"))
+                        .doOnError(throwable -> {
+                            log.error("Failed to add preference: " + finalPreference, throwable);
+                            sendMessage(chatId, "Failed to add preference '" + finalPreference + "': " + throwable.getMessage());
+                        })
+                        .subscribe();
+            }
         } else {
-            sendMessage(chatId, "Invalid format. Use: /addpref preference");
+            sendMessage(chatId, "Invalid format. Use: /addpref preference1, preference2, ...");
         }
     }
+
 
     private void handleViewPreferencesCommand(long chatId) {
         if (!sessionService.isUserLoggedIn(chatId)) {
@@ -535,18 +908,32 @@ public class Bot extends TelegramLongPollingBot {
 
         String[] parts = messageText.split(" ", 2);
         if (parts.length == 2) {
-            String preference = parts[1];
+            String preferencesToDelete = parts[1];
+            // Разделяем предпочтения по запятой
+            String[] preferenceArray = preferencesToDelete.split(",");
+
             Long userId = sessionService.getUserId(chatId);
 
             userService.getUserPreferences(userId)
                     .collectList()
                     .flatMap(preferences -> {
-                        if (preferences.contains(preference)) {
-                            return userService.deleteUserPreference(userId, preference)
-                                    .then(Mono.just("Preference deleted successfully!"));
-                        } else {
-                            return Mono.just("This preference does not exist in your list.");
+                        StringBuilder responseMessage = new StringBuilder();
+
+                        // Проходим по каждому предпочтению
+                        for (String preference : preferenceArray) {
+                            preference = preference.trim(); // Убираем пробелы
+
+                            if (preferences.contains(preference)) {
+                                // Удаляем предпочтение
+                                userService.deleteUserPreference(userId, preference)
+                                        .subscribe(); // Выполняем удаление
+
+                                responseMessage.append(preference).append(" deleted successfully!\n");
+                            } else {
+                                responseMessage.append(preference).append(" does not exist in your list.\n");
+                            }
                         }
+                        return Mono.just(responseMessage.toString()); // Возвращаем итоговое сообщение
                     })
                     .doOnNext(response -> sendMessage(chatId, response))
                     .doOnError(throwable -> {
@@ -555,9 +942,10 @@ public class Bot extends TelegramLongPollingBot {
                     })
                     .subscribe();
         } else {
-            sendMessage(chatId, "Invalid format. Use: /delpref preference");
+            sendMessage(chatId, "Invalid format. Use: /delpref preference1,preference2,...");
         }
     }
+
 
 
     private void sendMainMenu(long chatId) {

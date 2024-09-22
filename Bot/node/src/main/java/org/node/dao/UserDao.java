@@ -2,6 +2,7 @@ package org.node.dao;
 
 import org.node.entity.User;
 import org.node.entity.Visit;
+import org.node.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import org.springframework.stereotype.Repository;
@@ -12,21 +13,18 @@ import reactor.core.publisher.Mono;
 public class UserDao {
 
     private final R2dbcEntityTemplate r2dbcEntityTemplate;
+    private final UserRepository userRepository;
 
     @Autowired
-    public UserDao(R2dbcEntityTemplate r2dbcEntityTemplate) {
+    public UserDao(R2dbcEntityTemplate r2dbcEntityTemplate, UserRepository userRepository) {
         this.r2dbcEntityTemplate = r2dbcEntityTemplate;
+        this.userRepository = userRepository;  // Инициализируем это поле
     }
 
-    public Mono<Void> saveUser(String username, String password, String email) {
-        String sql = "INSERT INTO users (username, password, email) VALUES ($1, $2, $3)";
-        return r2dbcEntityTemplate.getDatabaseClient()
-                .sql(sql)
-                .bind("$1", username)
-                .bind("$2", password)
-                .bind("$3", email)
-                .then();
+    public Mono<Void> saveUser(User user) {
+        return userRepository.save(user).then();
     }
+
 
     public Mono<User> findUserByUsername(String username) {
         String sql = "SELECT * FROM users WHERE username = $1";
@@ -44,6 +42,23 @@ public class UserDao {
                 .one();
     }
 
+    public Mono<User> findUserByEmail(String email) {
+        String sql = "SELECT * FROM users WHERE email = $1";
+        return r2dbcEntityTemplate.getDatabaseClient()
+                .sql(sql)
+                .bind("$1", email)
+                .map(row -> {
+                    User user = new User();
+                    user.setId(row.get("id", Long.class));
+                    user.setUsername(row.get("username", String.class));
+                    user.setPassword(row.get("password", String.class));
+                    user.setEmail(row.get("email", String.class));
+                    return user;
+                })
+                .one();
+    }
+
+
     public Flux<String> getAllUserNames() {
         String sql = "SELECT username FROM users";
         return r2dbcEntityTemplate.getDatabaseClient()
@@ -53,7 +68,7 @@ public class UserDao {
     }
 
     public Mono<Void> saveUserPreference(Long userId, String preference) {
-        String sql = "INSERT INTO preferences (user_id, preference) VALUES ($1, $2)";
+        String sql = "INSERT INTO user_preferences (user_id, preference) VALUES ($1, $2)";
         return r2dbcEntityTemplate.getDatabaseClient()
                 .sql(sql)
                 .bind("$1", userId)
@@ -61,8 +76,9 @@ public class UserDao {
                 .then();
     }
 
+
     public Flux<String> findPreferencesByUserId(Long userId) {
-        String sql = "SELECT preference FROM preferences WHERE user_id = $1";
+        String sql = "SELECT preference FROM user_preferences WHERE user_id = $1";
         return r2dbcEntityTemplate.getDatabaseClient()
                 .sql(sql)
                 .bind("$1", userId)
@@ -70,14 +86,16 @@ public class UserDao {
                 .all();
     }
 
+
     public Mono<Void> deleteUserPreference(Long userId, String preference) {
-        String sql = "DELETE FROM preferences WHERE user_id = $1 AND preference = $2";
+        String sql = "DELETE FROM user_preferences WHERE user_id = $1 AND preference = $2";
         return r2dbcEntityTemplate.getDatabaseClient()
                 .sql(sql)
                 .bind("$1", userId)
                 .bind("$2", preference)
                 .then();
     }
+
 
     public Mono<Void> saveUserAllergy(Long userId, String allergy) {
         String sql = "INSERT INTO allergies (user_id, allergy) VALUES ($1, $2)";

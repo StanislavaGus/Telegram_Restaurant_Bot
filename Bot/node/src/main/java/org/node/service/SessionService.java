@@ -31,5 +31,3 @@ public class SessionService {
         return chatUserMap.get(chatId);
     }
 }
-
-

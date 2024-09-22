@@ -3,12 +3,14 @@ package org.node.service;
 import org.node.entity.AcceptableAllergy;
 import org.node.repository.AcceptableAllergiesRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Mono;
 
+import javax.annotation.PostConstruct;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,15 +19,33 @@ import java.util.List;
 public class AllergyLoaderService {
 
     private final AcceptableAllergiesRepository acceptableAllergiesRepository;
+    private final DatabaseClient databaseClient;
 
     @Autowired
-    public AllergyLoaderService(AcceptableAllergiesRepository acceptableAllergiesRepository) {
+    public AllergyLoaderService(AcceptableAllergiesRepository acceptableAllergiesRepository, DatabaseClient databaseClient) {
         this.acceptableAllergiesRepository = acceptableAllergiesRepository;
+        this.databaseClient = databaseClient;
     }
 
-    public Mono<Void> loadAllergiesFromFile(MultipartFile file) {
+    @PostConstruct
+    public void init() {
+        recreateTable()
+                .then(loadAllergiesFromFile("/allergies.txt"))
+                .doOnSuccess(aVoid -> System.out.println("Allergies loaded successfully"))
+                .doOnError(throwable -> System.err.println("Error loading allergies: " + throwable.getMessage()))
+                .subscribe();
+    }
+
+    private Mono<Void> recreateTable() {
+        return databaseClient.sql("DROP TABLE IF EXISTS acceptable_allergies")
+                .then()
+                .then(databaseClient.sql("CREATE TABLE acceptable_allergies (id SERIAL PRIMARY KEY, allergy VARCHAR(255))").then());
+    }
+
+    public Mono<Void> loadAllergiesFromFile(String filePath) {
         List<AcceptableAllergy> allergies = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(file.getInputStream()))) {
+        try (InputStream inputStream = getClass().getResourceAsStream(filePath);
+             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 AcceptableAllergy allergy = new AcceptableAllergy();
