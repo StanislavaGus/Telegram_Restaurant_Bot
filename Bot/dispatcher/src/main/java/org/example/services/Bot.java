@@ -41,6 +41,12 @@ public class Bot extends TelegramLongPollingBot {
     private final FoursquareService foursquareService;
     private Boolean choosingCityFlag;
     private Boolean choosingDistanceFlag;
+    private Boolean enterPrefencesFlag;
+    private Boolean enterAllergyFlag;
+    private Boolean enterSortByFlag;
+    private Boolean enterPricePolicyFlag;
+    private Boolean enterOpenNowFlag;
+
 
     @Autowired
     public Bot(BotConfiguration botConfig, AnnotationConfigApplicationContext context, UpdateController updateController, UserService userService, SessionService sessionService, FoursquareService foursquareService) {
@@ -52,6 +58,12 @@ public class Bot extends TelegramLongPollingBot {
         this.foursquareService = foursquareService;
         this.choosingCityFlag = false;
         this.choosingDistanceFlag = false;
+
+        this.enterPrefencesFlag = false;
+        this.enterAllergyFlag = false;
+        this.enterSortByFlag = false;
+        this.enterPricePolicyFlag = false;
+        this.enterOpenNowFlag = false;
     }
 
     @PostConstruct
@@ -108,6 +120,26 @@ public class Bot extends TelegramLongPollingBot {
                     this.choosingDistanceFlag = false;
                 }
 
+                else if (enterPrefencesFlag) {
+                    sendMessage(chatId, "You Enter - " + messageText);
+
+                    this.enterPrefencesFlag = false;
+                    String cleanedInput = messageText.replaceAll("[^a-zA-Z,]", "");
+
+                    String[] prefArray = cleanedInput.split(",");
+                    //1111111111тут надо его в буфер записать!!!!!!!!1
+                }
+
+                else if (enterAllergyFlag) {
+                    sendMessage(chatId, "You Enter - " + messageText);
+
+                    this.enterAllergyFlag = false;
+                    String cleanedInput = messageText.replaceAll("[^a-zA-Z,]", "");
+
+                    String[] allergyArray = cleanedInput.split(",");
+                    //1111111111тут надо его в буфер записать!!!!!!!!1
+                }
+
                 else if (messageText.equals("/start")) {
                     sendMainMenu(chatId);
                 } else if (messageText.equals("/help")) {
@@ -137,7 +169,7 @@ public class Bot extends TelegramLongPollingBot {
                 } else if (messageText.startsWith("Location")) {
                     locationButtonPushed(chatId);
                 } else if (messageText.startsWith("Search Filters")) {
-                    handleOption2(chatId);
+                    searchFiltersButtonPushed(chatId);
                 } else if (messageText.startsWith("Start Searching")) {
                     handleOption3(chatId);
 
@@ -149,8 +181,54 @@ public class Bot extends TelegramLongPollingBot {
                     chooseDistance(chatId);
                 } else if (messageText.startsWith("Go to Searching Menu")) {
                     removeKeyboard(chatId);
-                    handleFindRestaurantCommand(chatId);
-                } else if (messageText.startsWith("/randomrestaurant")) {
+                    handleFindRestaurantCommand(chatId);}
+
+
+                else if (messageText.startsWith("Preferences")) {
+                    preferences(chatId);}
+                else if (messageText.startsWith("Allergy")) {
+                    allergy(chatId);}
+
+
+                else if (messageText.startsWith("Sort by")) {
+                    sortBy(chatId);}
+
+                else if (messageText.matches("^/(relevance|rating|distance|popularity)$") && enterSortByFlag) {
+
+                    this.enterSortByFlag = false;
+                    String cleanedInput = messageText.replaceAll("[/]", "");
+                    //1111111111тут надо его в буфер записать!!!!!!!!1
+
+                    sendMessage(chatId, "You Enter - " + cleanedInput);
+                }
+
+                else if (messageText.startsWith("Pricing policy")) {
+                    pricingPolicy(chatId);}
+
+                else if (messageText.matches("^/[1-4]$") && enterPricePolicyFlag) {
+                    this.enterPricePolicyFlag = false;
+                    String cleanedInput = messageText.replaceAll("[/]", "");
+                    //1111111111тут надо его в буфер записать!!!!!!!!1
+
+                    sendMessage(chatId, "You Enter - " + cleanedInput);
+                }
+
+                //"Open Now"
+                else if (messageText.startsWith("Open Now")) {
+                    openNow(chatId);}
+
+                else if (messageText.matches("^/(yes|no)$") && enterOpenNowFlag) {
+                    this.enterOpenNowFlag = false;
+
+                    String cleanedInput = messageText.replaceAll("[/]", "");
+                    Boolean result = messageText.equals("yes");
+                    //1111111111тут надо его в буфер записать!!!!!!!!1
+
+                    sendMessage(chatId, "You Enter - " + result);
+                }
+
+
+                else if (messageText.startsWith("/randomrestaurant")) {
                     handleRandomRestaurantCommand(chatId, messageText);
                 } else if (messageText.startsWith("/visitlist")) {
                     handleVisitListCommand(chatId);
@@ -350,44 +428,6 @@ public class Bot extends TelegramLongPollingBot {
         }
     }
 
-
-
-    /*private void sendMainMenuWithButton(long chatId) {
-        SendMessage message = new SendMessage();
-        message.setChatId(String.valueOf(chatId));
-        message.setText("Choose how ....");
-
-        // Создание Reply-клавиатуры
-        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
-        List<KeyboardRow> keyboard = new ArrayList<>();
-
-        // Первая строка клавиатуры
-        KeyboardRow row1 = new KeyboardRow();
-        row1.add(new KeyboardButton("location"));
-        row1.add(new KeyboardButton("search filters"));
-
-        // Вторая строка клавиатуры
-        KeyboardRow row2 = new KeyboardRow();
-        row2.add(new KeyboardButton("Start searching"));
-
-        // Добавляем строки в клавиатуру
-        keyboard.add(row1);
-        keyboard.add(row2);
-
-        // Устанавливаем клавиатуру в сообщение
-        replyKeyboardMarkup.setKeyboard(keyboard);
-        replyKeyboardMarkup.setResizeKeyboard(true); // Для автоматического изменения размера
-        replyKeyboardMarkup.setOneTimeKeyboard(true); // Клавиатура не исчезает после нажатия
-        message.setReplyMarkup(replyKeyboardMarkup);
-
-        // Отправляем сообщение с клавиатурой
-        try {
-            execute(message);
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }
-    }*/
-
     private void sendCustomMenu(long chatId, List<String> buttonNames, int buttonsPerRow) {
         SendMessage message = new SendMessage();
         message.setChatId(String.valueOf(chatId));
@@ -434,7 +474,6 @@ public class Bot extends TelegramLongPollingBot {
             e.printStackTrace();
         }
     }
-
 
     private void handleFindRestaurantCommand(long chatId) {
         if (!sessionService.isUserLoggedIn(chatId)) {
@@ -576,13 +615,48 @@ public class Bot extends TelegramLongPollingBot {
     }
 
 
-
-
-    private void handleOption2(long chatId) {
-        sendMessage(chatId, "2!");
-        // Добавить любое действие для Опции 2
+    private void searchFiltersButtonPushed(long chatId) {
         removeKeyboard(chatId);
+
+        List<String> buttons = Arrays.asList("Preferences", "Allergy", "Sort by","Pricing policy",
+                "Open Now", "Go to Searching Menu");
+        sendCustomMenu(chatId, buttons, 3);
     }
+
+
+
+    private void preferences(long chatId) {
+        sendMessage(chatId, "If there are many preferences, you must enter them separated by commas." +
+                "\nExample: coffee, tea, ...");
+        this.enterPrefencesFlag = true;
+    }
+    private void allergy(long chatId) {
+        sendMessage(chatId, "If there are many allergies, you must enter them separated by commas." +
+                "\nExample: tomatoes, strawberry, ...");
+        this.enterAllergyFlag = true;
+    }
+
+    private void sortBy(long chatId) {
+        sendMessage(chatId, "Select the option to sort:" +
+                "\n  /relevance\n  /rating\n  /distance\n  /popularity");
+        this.enterSortByFlag = true;
+    }
+
+    private void pricingPolicy(long chatId) {
+        sendMessage(chatId, "Select the option from Prising List:" +
+                "\n  /1 - \uD83D\uDCB0 \n  /2 - \uD83D\uDCB0\uD83D\uDCB0 \n  " +
+                "/3 - \uD83D\uDCB0\uD83D\uDCB0\uD83D\uDCB0 \n  /4 - \uD83D\uDCB0\uD83D\uDCB0\uD83D\uDCB0\uD83D\uDCB0");
+        this.enterPricePolicyFlag = true;
+    }
+
+    private void openNow(long chatId) {
+        sendMessage(chatId, "Is it important for you that the restaurant is open right now" +
+                "\n  /yes \n  /no");
+        this.enterOpenNowFlag = true;
+    }
+
+
+
 
     private void handleOption3(long chatId) {
         sendMessage(chatId, "3!");
