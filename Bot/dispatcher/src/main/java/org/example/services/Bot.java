@@ -12,6 +12,7 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.objects.Location;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
@@ -163,7 +164,8 @@ public class Bot extends TelegramLongPollingBot {
                 } else if (messageText.startsWith("/register")) {
                     handleRegisterCommand(chatId, messageText);
                 } else if (messageText.startsWith("/login")) {
-                    handleLoginCommand(chatId, messageText);
+                    int messageId = update.getMessage().getMessageId();
+                    handleLoginCommand(chatId, messageText, messageId);
                 } else if (messageText.startsWith("/logout")) {
                     handleLogoutCommand(chatId);
                 }  else if (messageText.startsWith("/viewprefs")) {
@@ -1042,7 +1044,13 @@ public class Bot extends TelegramLongPollingBot {
         }
     }
 
-    private void handleLoginCommand(long chatId, String messageText) {
+    public void deleteMessage(long chatId, int messageId) {
+        DeleteMessage deleteMessage = new DeleteMessage();
+        deleteMessage.setChatId(String.valueOf(chatId));
+        deleteMessage.setMessageId(messageId);
+    }
+
+    private void handleLoginCommand(long chatId, String messageText, int messageId) {
         if (sessionService.isUserLoggedIn(chatId)) {
             sendMessage(chatId, "You are already logged in!");
             return;
@@ -1066,6 +1074,8 @@ public class Bot extends TelegramLongPollingBot {
                     .doOnSuccess(authenticated -> {
                         if (authenticated) {
                             sendMessage(chatId, "Login successful!");
+                            deleteMessage(chatId, messageId);
+
                         } else {
                             sendMessage(chatId, "Login failed: Invalid credentials");
                         }
