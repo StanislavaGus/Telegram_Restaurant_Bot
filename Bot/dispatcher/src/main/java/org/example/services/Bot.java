@@ -806,36 +806,29 @@ public class Bot extends TelegramLongPollingBot {
             return;
         }
 
-        String[] parts = messageText.split(" ", 2);
-        if (parts.length == 2) {
-            // Разделяем аллергии по запятой
-            String[] allergies = parts[1].split(",");
+        messageText = messageText.replaceAll("[^a-zA-Zа-яА-Я, ]", "");
+        String[] allergies = messageText.split(",");
 
-            Long userId = sessionService.getUserId(chatId);
+        Long userId = sessionService.getUserId(chatId);
 
-            for (String rawAllergy : allergies) {
-                String allergy = rawAllergy.trim(); // Убираем пробелы
+        for (String allergy : allergies) {
 
-                // Проверка регулярным выражением: только буквы русского и английского алфавита
-                if (!allergy.matches("[a-zA-Zа-яА-Я]+")) {
-                    sendMessage(chatId, "Invalid allergy format for: " + allergy + ". Only alphabetic characters are allowed.");
-                    continue;
-                }
-
-                // Создаем финальную переменную для использования в лямбде
-                final String finalAllergy = allergy;
-
-                // Добавляем аллергию
-                userService.addUserAllergy(userId, finalAllergy)
-                        .doOnSuccess(aVoid -> sendMessage(chatId, "Allergy '" + finalAllergy + "' added successfully!"))
-                        .doOnError(throwable -> {
-                            log.error("Failed to add allergy: " + finalAllergy, throwable);
-                            sendMessage(chatId, "Failed to add allergy '" + finalAllergy + "': " + throwable.getMessage());
-                        })
-                        .subscribe();
+            String tmp = allergy;
+            while (tmp.charAt(0)==' ' && (!tmp.isEmpty())){
+                tmp = tmp.substring(1);
             }
-        } else {
-            sendMessage(chatId, "Invalid format. Use: /addallergy allergy1, allergy2, ...");
+            // Создаем финальную переменную для использования в лямбде
+            final String finalAllergy = tmp;
+
+
+            // Добавляем аллергию
+            userService.addUserAllergy(userId, finalAllergy)
+                    .doOnSuccess(aVoid -> sendMessage(chatId, "Allergy '" + finalAllergy + "' added successfully!"))
+                    .doOnError(throwable -> {
+                        log.error("Failed to add allergy: " + finalAllergy, throwable);
+                        sendMessage(chatId, "Failed to add allergy '" + finalAllergy + "': " + throwable.getMessage());
+                    })
+                    .subscribe();
         }
     }
 
@@ -869,35 +862,30 @@ public class Bot extends TelegramLongPollingBot {
             return;
         }
 
-        String[] parts = messageText.split(" ", 2);
-        if (parts.length == 2) {
-            // Разделяем аллергии по запятой
-            String[] allergiesArray = parts[1].split(",");
+        messageText = messageText.replaceAll("[^a-zA-Zа-яА-Я, ]", "");
+        String[] allergiesArray = messageText.split(",");
 
-            Long userId = sessionService.getUserId(chatId);
+        Long userId = sessionService.getUserId(chatId);
 
-            for (String rawAllergy : allergiesArray) {
-                String allergy = rawAllergy.trim(); // Убираем пробелы
+        for (String allergy : allergiesArray) {
 
-                // Создаем финальную переменную для использования в лямбде
-                final String finalAllergy = allergy;
-
-                // Удаляем аллергию
-                userService.deleteUserAllergy(userId, finalAllergy)
-                        .doOnSuccess(aVoid -> sendMessage(chatId, "Allergy '" + finalAllergy + "' deleted successfully!"))
-                        .doOnError(throwable -> {
-                            log.error("Failed to delete allergy: " + finalAllergy, throwable);
-                            sendMessage(chatId, "Failed to delete allergy '" + finalAllergy + "': " + throwable.getMessage());
-                        })
-                        .subscribe();
+            String tmp = allergy;
+            while (tmp.charAt(0)==' ' && (!tmp.isEmpty())){
+                tmp = tmp.substring(1);
             }
-        } else {
-            sendMessage(chatId, "Invalid format. Use: /delallergy allergy1, allergy2, ...");
+            // Создаем финальную переменную для использования в лямбде
+            final String finalAllergy = tmp;
+
+            // Удаляем аллергию
+            userService.deleteUserAllergy(userId, finalAllergy)
+                    .doOnSuccess(aVoid -> sendMessage(chatId, "Allergy '" + finalAllergy + "' deleted successfully!"))
+                    .doOnError(throwable -> {
+                        log.error("Failed to delete allergy: " + finalAllergy, throwable);
+                        sendMessage(chatId, "Failed to delete allergy '" + finalAllergy + "': " + throwable.getMessage());
+                    })
+                    .subscribe();
         }
     }
-
-
-
 
     private void handleAddPreferenceCommand(long chatId, String messageText) {
         if (!sessionService.isUserLoggedIn(chatId)) {
@@ -912,8 +900,13 @@ public class Bot extends TelegramLongPollingBot {
 
         for (String preference : preferences) {
 
+            String tmp = preference;
+            while (tmp.charAt(0)==' ' && (!tmp.isEmpty())){
+                tmp = tmp.substring(1);
+            }
             // Создаем финальную переменную для использования в лямбде
-            final String finalPreference = preference;
+            final String finalPreference = tmp;
+
 
             // Добавляем предпочтение
             userService.addUserPreference(userId, finalPreference)
