@@ -481,27 +481,22 @@ public class Bot extends TelegramLongPollingBot {
             return;
         }
 
-        String[] parts = messageText.split(" ", 2);
-        if (parts.length == 2) {
-            String restaurantId = parts[1];
-            Long userId = sessionService.getUserId(chatId);
+        String restaurantId = messageText;
+        Long userId = sessionService.getUserId(chatId);
 
-            userService.markVisited(userId, restaurantId)
-                    .doOnSuccess(result -> {
-                        if (result) {
-                            sendMessage(chatId, "Restaurant marked as visited successfully!");
-                        } else {
-                            sendMessage(chatId, "Restaurant not found in your visit list.");
-                        }
-                    })
-                    .doOnError(throwable -> {
-                        log.error("Failed to mark restaurant as visited", throwable);
-                        sendMessage(chatId, "Failed to mark restaurant as visited: " + throwable.getMessage());
-                    })
-                    .subscribe();
-        } else {
-            sendMessage(chatId, "Invalid format. Use: /markvisited [restaurant_id]");
-        }
+        userService.markVisited(userId, restaurantId)
+                .doOnSuccess(result -> {
+                    if (result) {
+                        sendMessage(chatId, "Restaurant marked as visited successfully!");
+                    } else {
+                        sendMessage(chatId, "Restaurant not found in your visit list.");
+                    }
+                })
+                .doOnError(throwable -> {
+                    log.error("Failed to mark restaurant as visited", throwable);
+                    sendMessage(chatId, "Failed to mark restaurant as visited: " + throwable.getMessage());
+                })
+                .subscribe();
     }
 
 

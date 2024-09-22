@@ -152,7 +152,7 @@ public class UserService {
 
     public Mono<Boolean> markVisited(Long userId, String restaurantId) {
         return userDao.findVisitsByUserId(userId)
-                .filter(visit -> visit.equals(restaurantId))
+                .filter(visit -> visit.getRestaurantId().equals(restaurantId))  // убедитесь, что visit — это объект с полем restaurantId
                 .hasElements()
                 .flatMap(exists -> {
                     if (exists) {
@@ -163,6 +163,7 @@ public class UserService {
                     }
                 });
     }
+
 
 
     public Mono<Void> removeVisit(Long userId, String restaurantId) {
