@@ -171,7 +171,7 @@ public class Bot extends TelegramLongPollingBot {
                 } else if (messageText.startsWith("Search Filters")) {
                     searchFiltersButtonPushed(chatId);
                 } else if (messageText.startsWith("Start Searching")) {
-                    handleOption3(chatId);
+                    startSearching(chatId);
 
                 } else if (messageText.startsWith("Send my location")) {
                     sendMyLocation(chatId);
@@ -656,11 +656,11 @@ public class Bot extends TelegramLongPollingBot {
     }
 
 
+    private void startSearching(long chatId) {
+        sendMessage(chatId, "Results:");
 
+        //____Добавить логику поика!!!!!!!!
 
-    private void handleOption3(long chatId) {
-        sendMessage(chatId, "3!");
-        // Добавить любое действие для Опции 3
         removeKeyboard(chatId);
     }
 
