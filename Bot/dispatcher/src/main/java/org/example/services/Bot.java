@@ -346,19 +346,19 @@ public class Bot extends TelegramLongPollingBot {
                 "/register [username] [password] [email] - Register a new user\n" +
                 "/login [username] [password] - Log in\n" +
                 "/logout - Log out\n" +
-                "/addpref [preference] - Add a new preference\n" +
+                "/addpref - Add a new preference\n" +
                 "/viewprefs - View your preferences\n" +
-                "/delpref [preference] - Delete a preference\n" +
-                "/addallergy [allergy] - Add a new allergy\n" +
+                "/delpref - Delete a preference\n" +
+                "/addallergy - Add a new allergy\n" +
                 "/viewallergies - View your allergies\n" +
-                "/delallergy [allergy] - Delete an allergy\n" +
+                "/delallergy - Delete an allergy\n" +
                 "/findrestaurant - Find a restaurant\n" +
                 "/randomrestaurant [location] [radius] - Find a random restaurant\n" +
                 "/visitlist - Show visit-related commands\n" +
-                "/addvisit [restaurant_id] - Add a restaurant to your visit list\n" +
+                "/addvisit - Add a restaurant to your visit list\n" +
                 "/showlist - Show your visit list\n" +
-                "/markvisited [restaurant_id] - Mark a restaurant as visited\n" +
-                "/removevisit [restaurant_id] - Remove a restaurant from your visit list";
+                "/markvisited - Mark a restaurant as visited\n" +
+                "/removevisit - Remove a restaurant from your visit list";
 
         sendMessage(chatId, helpMessage);
     }
