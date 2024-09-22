@@ -221,7 +221,7 @@ public class Bot extends TelegramLongPollingBot {
                     this.enterOpenNowFlag = false;
 
                     String cleanedInput = messageText.replaceAll("[/]", "");
-                    Boolean result = messageText.equals("yes");
+                    Boolean result = cleanedInput.equals("yes");
                     //1111111111тут надо его в буфер записать!!!!!!!!1
 
                     sendMessage(chatId, "You Enter - " + result);
