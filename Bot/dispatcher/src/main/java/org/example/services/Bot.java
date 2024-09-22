@@ -411,31 +411,26 @@ public class Bot extends TelegramLongPollingBot {
             return;
         }
 
-        String[] parts = messageText.split(" ", 2);
-        if (parts.length == 2) {
-            String restaurantId = parts[1];
-            Long userId = sessionService.getUserId(chatId);
+        String restaurantId = messageText;
+        Long userId = sessionService.getUserId(chatId);
 
-            userService.getVisitList(userId)
-                    .collectList()
-                    .flatMap(visits -> {
-                        boolean restaurantExists = visits.stream().anyMatch(visit -> visit.getRestaurantId().equals(restaurantId));
-                        if (restaurantExists) {
-                            return Mono.just("Restaurant is already in your visit list.");
-                        } else {
-                            return userService.addVisit(userId, restaurantId)
-                                    .then(Mono.just("Restaurant added to visit list successfully!"));
-                        }
-                    })
-                    .doOnSuccess(message -> sendMessage(chatId, message))
-                    .doOnError(throwable -> {
-                        log.error("Failed to add restaurant to visit list", throwable);
-                        sendMessage(chatId, "Failed to add restaurant to visit list: " + throwable.getMessage());
-                    })
-                    .subscribe();
-        } else {
-            sendMessage(chatId, "Invalid format. Use: /addvisit [restaurant_id]");
-        }
+        userService.getVisitList(userId)
+                .collectList()
+                .flatMap(visits -> {
+                    boolean restaurantExists = visits.stream().anyMatch(visit -> visit.getRestaurantId().equals(restaurantId));
+                    if (restaurantExists) {
+                        return Mono.just("Restaurant is already in your visit list.");
+                    } else {
+                        return userService.addVisit(userId, restaurantId)
+                                .then(Mono.just("Restaurant added to visit list successfully!"));
+                    }
+                })
+                .doOnSuccess(message -> sendMessage(chatId, message))
+                .doOnError(throwable -> {
+                    log.error("Failed to add restaurant to visit list", throwable);
+                    sendMessage(chatId, "Failed to add restaurant to visit list: " + throwable.getMessage());
+                })
+                .subscribe();
     }
 
 
@@ -516,31 +511,26 @@ public class Bot extends TelegramLongPollingBot {
             return;
         }
 
-        String[] parts = messageText.split(" ", 2);
-        if (parts.length == 2) {
-            String restaurantId = parts[1];
-            Long userId = sessionService.getUserId(chatId);
+        String restaurantId = messageText;
+        Long userId = sessionService.getUserId(chatId);
 
-            userService.getVisitList(userId)
-                    .filter(visit -> visit.getRestaurantId().equals(restaurantId))
-                    .collectList()
-                    .flatMap(visits -> {
-                        if (visits.isEmpty()) {
-                            return Mono.just("Restaurant not found in your visit list.");
-                        } else {
-                            return userService.removeVisit(userId, restaurantId)
-                                    .then(Mono.just("Restaurant removed from visit list successfully!"));
-                        }
-                    })
-                    .doOnSuccess(response -> sendMessage(chatId, response))
-                    .doOnError(throwable -> {
-                        log.error("Failed to remove restaurant from visit list", throwable);
-                        sendMessage(chatId, "Failed to remove restaurant from visit list: " + throwable.getMessage());
-                    })
-                    .subscribe();
-        } else {
-            sendMessage(chatId, "Invalid format. Use: /removevisit [restaurant_id]");
-        }
+        userService.getVisitList(userId)
+                .filter(visit -> visit.getRestaurantId().equals(restaurantId))
+                .collectList()
+                .flatMap(visits -> {
+                    if (visits.isEmpty()) {
+                        return Mono.just("Restaurant not found in your visit list.");
+                    } else {
+                        return userService.removeVisit(userId, restaurantId)
+                                .then(Mono.just("Restaurant removed from visit list successfully!"));
+                    }
+                })
+                .doOnSuccess(response -> sendMessage(chatId, response))
+                .doOnError(throwable -> {
+                    log.error("Failed to remove restaurant from visit list", throwable);
+                    sendMessage(chatId, "Failed to remove restaurant from visit list: " + throwable.getMessage());
+                })
+                .subscribe();
     }
 
     private void sendCustomMenu(long chatId, List<String> buttonNames, int buttonsPerRow) {
