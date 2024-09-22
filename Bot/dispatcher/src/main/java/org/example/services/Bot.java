@@ -200,7 +200,7 @@ public class Bot extends TelegramLongPollingBot {
 
                 else if (messageText.startsWith("/addpref")) {
                     sendMessage(chatId, "If there are many preferences to add, you must enter them separated by commas." +
-                            "\nExample: coffee, tea, ...");
+                            "\nExample: coffee,tea,...");
                     this.addPrefFlag = true;}
 
                 else if (addPrefFlag) {
@@ -210,7 +210,7 @@ public class Bot extends TelegramLongPollingBot {
 
                 else if (messageText.startsWith("/delpref")) {
                     sendMessage(chatId, "If there are many preferences to delete, you must enter them separated by commas." +
-                            "\nExample: coffee, tea, ...");
+                            "\nExample: coffee,tea,...");
                     this.delPrefFlag = true;}
 
                 else if (delPrefFlag) {
@@ -221,7 +221,7 @@ public class Bot extends TelegramLongPollingBot {
 
                 else if (messageText.startsWith("/addallergy")) {
                     sendMessage(chatId, "If there are many allergies to add, you must enter them separated by commas." +
-                            "\nExample: tomatoes, strawberry, ...");
+                            "\nExample: tomatoes,strawberry,...");
                     this.addAllergyFlag = true;}
 
                 else if (addAllergyFlag) {
@@ -231,7 +231,7 @@ public class Bot extends TelegramLongPollingBot {
 
                 else if (messageText.startsWith("/delallergy")) {
                     sendMessage(chatId, "If there are many allergies to delete, you must enter them separated by commas." +
-                            "\nExample: tomatoes, strawberry, ...");
+                            "\nExample: tomatoes,strawberry,...");
                     this.delAllergyFlag = true;}
 
                 else if (delAllergyFlag) {
@@ -915,36 +915,24 @@ public class Bot extends TelegramLongPollingBot {
             return;
         }
 
-        String[] parts = messageText.split(" ", 2);
-        if (parts.length == 2) {
-            // Разделяем предпочтения по запятой
-            String[] preferences = parts[1].split(",");
+        messageText = messageText.replaceAll("[^a-zA-Zа-яА-Я, ]", "");
+        String[] preferences = messageText.split(",");
 
-            Long userId = sessionService.getUserId(chatId);
+        Long userId = sessionService.getUserId(chatId);
 
-            for (String rawPreference : preferences) {
-                String preference = rawPreference.trim(); // Убираем пробелы
+        for (String preference : preferences) {
 
-                // Проверка регулярным выражением: только буквы русского и английского алфавита
-                if (!preference.matches("[a-zA-Zа-яА-Я]+")) {
-                    sendMessage(chatId, "Invalid preference format for: " + preference + ". Only alphabetic characters are allowed.");
-                    continue;
-                }
+            // Создаем финальную переменную для использования в лямбде
+            final String finalPreference = preference;
 
-                // Создаем финальную переменную для использования в лямбде
-                final String finalPreference = preference;
-
-                // Добавляем предпочтение
-                userService.addUserPreference(userId, finalPreference)
-                        .doOnSuccess(aVoid -> sendMessage(chatId, "Preference '" + finalPreference + "' added successfully!"))
-                        .doOnError(throwable -> {
-                            log.error("Failed to add preference: " + finalPreference, throwable);
-                            sendMessage(chatId, "Failed to add preference '" + finalPreference + "': " + throwable.getMessage());
-                        })
-                        .subscribe();
-            }
-        } else {
-            sendMessage(chatId, "Invalid format. Use: /addpref preference1, preference2, ...");
+            // Добавляем предпочтение
+            userService.addUserPreference(userId, finalPreference)
+                    .doOnSuccess(aVoid -> sendMessage(chatId, "Preference '" + finalPreference + "' added successfully!"))
+                    .doOnError(throwable -> {
+                        log.error("Failed to add preference: " + finalPreference, throwable);
+                        sendMessage(chatId, "Failed to add preference '" + finalPreference + "': " + throwable.getMessage());
+                    })
+                    .subscribe();
         }
     }
 
@@ -979,44 +967,38 @@ public class Bot extends TelegramLongPollingBot {
             return;
         }
 
-        String[] parts = messageText.split(" ", 2);
-        if (parts.length == 2) {
-            String preferencesToDelete = parts[1];
-            // Разделяем предпочтения по запятой
-            String[] preferenceArray = preferencesToDelete.split(",");
+        messageText = messageText.replaceAll("[^a-zA-Zа-яА-Я, ]", "");
+        String[] preferenceArray = messageText.split(",");
 
-            Long userId = sessionService.getUserId(chatId);
+        Long userId = sessionService.getUserId(chatId);
 
-            userService.getUserPreferences(userId)
-                    .collectList()
-                    .flatMap(preferences -> {
-                        StringBuilder responseMessage = new StringBuilder();
+        userService.getUserPreferences(userId)
+                .collectList()
+                .flatMap(preferences -> {
+                    StringBuilder responseMessage = new StringBuilder();
 
-                        // Проходим по каждому предпочтению
-                        for (String preference : preferenceArray) {
-                            preference = preference.trim(); // Убираем пробелы
+                    // Проходим по каждому предпочтению
+                    for (String preference : preferenceArray) {
+                        preference = preference.trim(); // Убираем пробелы
 
-                            if (preferences.contains(preference)) {
-                                // Удаляем предпочтение
-                                userService.deleteUserPreference(userId, preference)
-                                        .subscribe(); // Выполняем удаление
+                        if (preferences.contains(preference)) {
+                            // Удаляем предпочтение
+                            userService.deleteUserPreference(userId, preference)
+                                    .subscribe(); // Выполняем удаление
 
-                                responseMessage.append(preference).append(" deleted successfully!\n");
-                            } else {
-                                responseMessage.append(preference).append(" does not exist in your list.\n");
-                            }
+                            responseMessage.append(preference).append(" deleted successfully!\n");
+                        } else {
+                            responseMessage.append(preference).append(" does not exist in your list.\n");
                         }
-                        return Mono.just(responseMessage.toString()); // Возвращаем итоговое сообщение
-                    })
-                    .doOnNext(response -> sendMessage(chatId, response))
-                    .doOnError(throwable -> {
-                        log.error("Failed to delete preference", throwable);
-                        sendMessage(chatId, "Failed to delete preference: " + throwable.getMessage());
-                    })
-                    .subscribe();
-        } else {
-            sendMessage(chatId, "Invalid format. Use: /delpref preference1,preference2,...");
-        }
+                    }
+                    return Mono.just(responseMessage.toString()); // Возвращаем итоговое сообщение
+                })
+                .doOnNext(response -> sendMessage(chatId, response))
+                .doOnError(throwable -> {
+                    log.error("Failed to delete preference", throwable);
+                    sendMessage(chatId, "Failed to delete preference: " + throwable.getMessage());
+                })
+                .subscribe();
     }
 
 
