@@ -1,0 +1,44 @@
+version: '3.8'
+services:
+  dispatcher-app:
+    build: .
+    container_name: dispatcher-app
+    ports:
+      - "8084:8084"  # server.port=8084
+    depends_on:
+      - postgres-db
+      - rabbitmq
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/postgres  # Updated based on spring.datasource.url
+      - SPRING_DATASOURCE_USERNAME=userok  # Updated based on spring.datasource.username
+      - SPRING_DATASOURCE_PASSWORD=12345  # Updated based on spring.datasource.password
+      - SPRING_RABBITMQ_HOST=rabbitmq  # Using RabbitMQ service instead of localhost
+      - SPRING_RABBITMQ_PORT=5672  # Using default RabbitMQ port
+      - SPRING_RABBITMQ_USERNAME=userok  # Updated based on spring.rabbitmq.username
+      - SPRING_RABBITMQ_PASSWORD=p@ssw0rd  # Updated based on spring.rabbitmq.password
+      - FOURSQUARE_API_KEY=fsq3SltC/PKY6e1XzBrB4qgrYeKRiVFTV/bvcVrTXdk5NdI=  # Foursquare API key
+
+  postgres-db:
+    image: postgres:14
+    container_name: postgres-db
+    environment:
+      POSTGRES_DB: postgres  # Matching with spring.datasource.url database
+      POSTGRES_USER: userok  # Matching with spring.datasource.username
+      POSTGRES_PASSWORD: 12345  # Matching with spring.datasource.password
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"  # Management console for RabbitMQ
+    environment:
+      RABBITMQ_DEFAULT_USER: userok  # Matching with spring.rabbitmq.username
+      RABBITMQ_DEFAULT_PASS: p@ssw0rd  # Matching with spring.rabbitmq.password
+
+volumes:
+  postgres-data:
