@@ -57,7 +57,7 @@ public class FoursquareService {
                 urlBuilder.append("&ll=").append(latitude).append(",").append(longitude);
             }
 
-            urlBuilder.append("&limit=5");
+            urlBuilder.append("&limit=50");
 
             // Добавляем авторизационный ключ и выполняем запрос
             Request request = new Request.Builder()
