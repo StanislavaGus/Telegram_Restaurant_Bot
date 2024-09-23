@@ -32,6 +32,47 @@
 3. **Run the application**: After configuring RabbitMQ and PostgreSQL, navigate to the project directory and run the `DispatcherApplication` file to start the application. This will initialize the Spring context and connect to the required services.
 
 
+# Using example
+
+![image](https://github.com/user-attachments/assets/d7345348-2dde-4daa-a56c-347b0e669434)
+
+### Registation
+![image](https://github.com/user-attachments/assets/ac13a708-b049-4b9a-82a3-a56a33f6a7d5)
+
+### Login
+
+After a successful login, the message with the password is deleted from the chat.
+![image](https://github.com/user-attachments/assets/0ad7cafb-f568-4b95-8233-d73f402ba9ee)
+![image](https://github.com/user-attachments/assets/8fa1d96f-dab7-4769-a138-5b0a2f18ec1b)
+
+### WishList
+![image](https://github.com/user-attachments/assets/eebf5ab4-7aa1-45a6-b5d9-db59cfa85173)
+![image](https://github.com/user-attachments/assets/21224ae5-0737-4b18-abd6-d4683788d16a)
+
+### Preference
+![image](https://github.com/user-attachments/assets/2537b49f-cb10-44ec-9c67-605b40c86813)
+
+### Allergies
+![image](https://github.com/user-attachments/assets/a6aa724c-3ebc-4b56-ab35-9e79017c1c6b)
+
+### Find random restaurant
+![image](https://github.com/user-attachments/assets/6605bf5d-f534-4682-828e-0cd7339c4489)
+
+### Find restaurant (search with parameters)
+![image](https://github.com/user-attachments/assets/993537a9-67d5-4e80-8dfc-a5a4de4a86ed)
+
+#### Location
+![image](https://github.com/user-attachments/assets/3f0e6c22-ea36-45e0-9b8e-9dfaf1f9496b)
+![image](https://github.com/user-attachments/assets/276f6b1f-ff40-4481-aab9-9351b6f7a098)
+
+#### Search Filters
+![image](https://github.com/user-attachments/assets/10ea0557-8a7c-4ee0-9588-3d2b0461434b)
+![image](https://github.com/user-attachments/assets/574ad4ea-a0e6-40e7-8abf-c467ef83518a)
+
+#### Results
+![image](https://github.com/user-attachments/assets/bd813462-e5fc-43fe-90ce-e2c1e5370424)
+![image](https://github.com/user-attachments/assets/a8aed645-c6df-4579-bfe1-7057b2c92b91)
+
 
 # Realisation
 
