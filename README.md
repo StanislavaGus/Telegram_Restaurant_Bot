@@ -34,44 +34,50 @@
 
 # Using example
 
-![image](https://github.com/user-attachments/assets/d7345348-2dde-4daa-a56c-347b0e669434)
+<img src="https://github.com/user-attachments/assets/d7345348-2dde-4daa-a56c-347b0e669434" width="300" />
 
-### Registation
-![image](https://github.com/user-attachments/assets/ac13a708-b049-4b9a-82a3-a56a33f6a7d5)
+### Registration
+<img src="https://github.com/user-attachments/assets/ac13a708-b049-4b9a-82a3-a56a33f6a7d5" width="300" />
 
 ### Login
 
 After a successful login, the message with the password is deleted from the chat.
-![image](https://github.com/user-attachments/assets/0ad7cafb-f568-4b95-8233-d73f402ba9ee)
-![image](https://github.com/user-attachments/assets/8fa1d96f-dab7-4769-a138-5b0a2f18ec1b)
+
+<img src="https://github.com/user-attachments/assets/0ad7cafb-f568-4b95-8233-d73f402ba9ee" width="300" />
+
+<img src="https://github.com/user-attachments/assets/8fa1d96f-dab7-4769-a138-5b0a2f18ec1b" width="300" />
 
 ### WishList
-![image](https://github.com/user-attachments/assets/eebf5ab4-7aa1-45a6-b5d9-db59cfa85173)
-![image](https://github.com/user-attachments/assets/21224ae5-0737-4b18-abd6-d4683788d16a)
+<img src="https://github.com/user-attachments/assets/eebf5ab4-7aa1-45a6-b5d9-db59cfa85173" width="300" />
+
+<img src="https://github.com/user-attachments/assets/21224ae5-0737-4b18-abd6-d4683788d16a" width="300" />
 
 ### Preference
-![image](https://github.com/user-attachments/assets/2537b49f-cb10-44ec-9c67-605b40c86813)
+<img src="https://github.com/user-attachments/assets/2537b49f-cb10-44ec-9c67-605b40c86813" width="300" />
 
 ### Allergies
-![image](https://github.com/user-attachments/assets/a6aa724c-3ebc-4b56-ab35-9e79017c1c6b)
+<img src="https://github.com/user-attachments/assets/a6aa724c-3ebc-4b56-ab35-9e79017c1c6b" width="300" />
 
 ### Find random restaurant
-![image](https://github.com/user-attachments/assets/6605bf5d-f534-4682-828e-0cd7339c4489)
+<img src="https://github.com/user-attachments/assets/6605bf5d-f534-4682-828e-0cd7339c4489" width="300" />
 
 ### Find restaurant (search with parameters)
-![image](https://github.com/user-attachments/assets/993537a9-67d5-4e80-8dfc-a5a4de4a86ed)
+<img src="https://github.com/user-attachments/assets/993537a9-67d5-4e80-8dfc-a5a4de4a86ed" width="300" />
 
 #### Location
-![image](https://github.com/user-attachments/assets/3f0e6c22-ea36-45e0-9b8e-9dfaf1f9496b)
-![image](https://github.com/user-attachments/assets/276f6b1f-ff40-4481-aab9-9351b6f7a098)
+<img src="https://github.com/user-attachments/assets/3f0e6c22-ea36-45e0-9b8e-9dfaf1f9496b" width="300" />
+
+<img src="https://github.com/user-attachments/assets/276f6b1f-ff40-4481-aab9-9351b6f7a098" width="300" />
 
 #### Search Filters
-![image](https://github.com/user-attachments/assets/10ea0557-8a7c-4ee0-9588-3d2b0461434b)
-![image](https://github.com/user-attachments/assets/574ad4ea-a0e6-40e7-8abf-c467ef83518a)
+<img src="https://github.com/user-attachments/assets/10ea0557-8a7c-4ee0-9588-3d2b0461434b" width="300" />
+
+<img src="https://github.com/user-attachments/assets/574ad4ea-a0e6-40e7-8abf-c467ef83518a" width="300" />
 
 #### Results
-![image](https://github.com/user-attachments/assets/bd813462-e5fc-43fe-90ce-e2c1e5370424)
-![image](https://github.com/user-attachments/assets/a8aed645-c6df-4579-bfe1-7057b2c92b91)
+<img src="https://github.com/user-attachments/assets/bd813462-e5fc-43fe-90ce-e2c1e5370424" width="300" />
+
+<img src="https://github.com/user-attachments/assets/a8aed645-c6df-4579-bfe1-7057b2c92b91" width="300" />
 
 
 # Realisation
