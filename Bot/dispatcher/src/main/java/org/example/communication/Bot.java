@@ -1,4 +1,4 @@
-package org.example.services;
+package org.example.communication;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.log4j.Log4j2;

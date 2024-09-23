@@ -1,4 +1,4 @@
-package org.example.services;
+package org.example.communication;
 
 public class SearchParameters {
     private String query;

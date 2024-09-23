@@ -1,6 +1,6 @@
 package org.example.configuration;
 
-import org.example.services.Bot;
+import org.example.communication.Bot;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.event.ContextRefreshedEvent;
