@@ -1,7 +1,12 @@
 # Telegram_Restaurant_Bot
 
+## Run the application 
 
+1. **Install RabbitMQ**: Download and install RabbitMQ from the official website. Ensure that the RabbitMQ service is running after installation.
 
+2. **Install PostgreSQL**: Download and install PostgreSQL from the official website. After installation, create the necessary databases and users for your application.
+
+3. **Run the application**: After configuring RabbitMQ and PostgreSQL, navigate to the project directory and run the `DispatcherApplication` file to start the application. This will initialize the Spring context and connect to the required services.
 
 
 
