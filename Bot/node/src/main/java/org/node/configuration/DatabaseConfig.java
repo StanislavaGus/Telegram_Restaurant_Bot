@@ -3,8 +3,13 @@ package org.node.configuration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
+import org.springframework.data.r2dbc.dialect.PostgresDialect;
+import org.springframework.data.r2dbc.dialect.R2dbcDialect;
+import org.springframework.data.relational.core.dialect.Dialect;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.r2dbc.core.DatabaseClient;
 
 import javax.sql.DataSource;
 
@@ -45,4 +50,5 @@ public class DatabaseConfig {
     public JdbcTemplate jdbcTemplate(DataSource dataSource) {
         return new JdbcTemplate(dataSource);
     }
+
 }

@@ -4,13 +4,13 @@ import io.r2dbc.spi.ConnectionFactories;
 import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.ConnectionFactoryOptions;
 import static io.r2dbc.spi.ConnectionFactoryOptions.*;
-import static io.r2dbc.postgresql.PostgresqlConnectionFactoryProvider.*;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.r2dbc.config.AbstractR2dbcConfiguration;
+import org.springframework.data.relational.core.dialect.Dialect;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import org.springframework.data.r2dbc.dialect.PostgresDialect;
@@ -42,10 +42,10 @@ public class ReactiveDatabaseConfig extends AbstractR2dbcConfiguration {
         logger.debug("Creating ConnectionFactory with URL: {}, Username: {}", url, username);
         return ConnectionFactories.get(ConnectionFactoryOptions.builder()
                 .option(DRIVER, "postgresql")
-                .option(PROTOCOL, "postgresql")
+                .option(PROTOCOL, "r2dbc")
                 .option(HOST, "localhost")
-                .option(PORT, 32768) // Убедитесь, что порт правильный
-                .option(DATABASE, "postgres") // Убедитесь, что имя базы данных правильное
+                .option(PORT, 5432)
+                .option(DATABASE, "postgres")
                 .option(USER, username)
                 .option(PASSWORD, password)
                 .build());
