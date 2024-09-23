@@ -76,4 +76,7 @@ There is also a standard search with parameters.
  **start Searching(long cat Id)**  
     Searches for restaurants based on the user's entered parameters, such as location, preferences, allergies, pricing policy, whether the restaurant is open now, search radius, etc. The results are displayed as links to restaurants. You can also specify an option in the parameters to sort the results.
 
+## RabbitMQ
+The RabbitMQ message broker has been added to the project, however, queues are formed on this version, but are not used. It will be updated in the future.
+
    
