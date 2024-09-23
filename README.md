@@ -1,5 +1,28 @@
 # Telegram_Restaurant_Bot
 
+## Task
+### Features
+
+1. **Sign up**
+2. **Sign in**
+3. **Preferences**
+   - Show user preferences
+   - Add preferences (e.g. vegetarian, allergies, Italian, fish, etc)
+   - Delete preferences
+
+4. **Find a restaurant**
+   - Request a restaurant with query (location, kitchen, keywords, etc)
+     - If some criteria are not set, user preferences should be used
+     - Allow setting `skip` for criteria to skip it
+   - Request a random restaurant (location + area)
+
+5. **Visit list**
+   - Add restaurant to visit list
+   - Show visit list
+   - Mark restaurant as visited
+   - Remove restaurant from list
+
+
 ## Run the application 
 
 1. **Install RabbitMQ**: Download and install RabbitMQ from the official website. Ensure that the RabbitMQ service is running after installation.
