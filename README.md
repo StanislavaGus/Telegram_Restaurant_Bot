@@ -267,3 +267,502 @@ There is also a standard search with parameters.
 DispatcherApplication class.java is the entry point for launching an application that uses Spring to manage the configuration and initialization of the Telegram bot. This class controls the launch of the application context with activated profiles, configuration settings, and bot initialization.
 
 ---
+
+## Node/cofiguration
+
+###  `DatabaseConfig.java`
+
+This class configures the connection to the PostgreSQL database using JDBC and provides the `JdbcTemplate` bean for executing SQL queries.
+
+- **Annotation `@Configuration`:** Indicates that this is the Spring configuration class.
+- **Annotation `@Value`:** Used to embed values from the properties file ('application.properties').
+- **The `dataSource()` method:** Creates and configures a data source (`DataSource') to connect to the database.
+- **The 'JdbcTemplate()` method:** Creates the 'JdbcTemplate` bean, which will be used to execute SQL queries.
+
+**Task:** Managing the connection to the PostgreSQL database and creating a 'JdbcTemplate` for working with SQL.
+
+---
+
+### `FoursquareConfig.java`
+
+This class configures the HTTP client to work with the Foursquare API and provides an API key for interacting with the service.
+
+- **Annotation `@Configuration`:** Defines the class as a configuration class.
+- **The `OkHttpClient()` method:** Returns the 'OkHttpClient` bin for executing HTTP requests.
+- **The `foursquareApiKey() method`:** Returns the API key for accessing Foursquare.
+
+**Task:** Configuring the HTTP client to work with the Foursquare API and providing an API key.
+
+---
+
+### `NodeConfiguration.java`
+
+This class is responsible for configuring components and repositories specific to the `node` profile.
+
+- **Annotation `@Profile("node")`:** Indicates that this configuration is activated only when using the `node` profile.
+- **Annotation `@ComponentScan`:** Scans packages to find Spring components.
+- **Annotation `@EnableR2dbcRepositories`:** Includes support for reactive repositories for working with the database via R2DBC.
+
+**Task:** Managing components and repositories specific to the `node` profile.
+
+---
+
+### `ReactiveDatabaseConfig.java`
+
+This class configures a reactive connection to a PostgreSQL database using R2DBC and manages transactions.
+
+- **Annotation `@EnableTransactionManagement`:** Enables transaction management.
+- **The `ConnectionFactory()` method:** Creates a reactive connection factory (`ConnectionFactory') for working with PostgreSQL via R2DBC.
+- **The `databaseClient()` method:** Returns `DatabaseClient`, which is used to make queries to the database.
+- **The `r2dbcEntityTemplate()` method:** Provides a reactive template for working with entities.
+- **The `TransactionManager()` method:** Creates a transaction manager to manage reactive transactions.
+- **The `transactionalOperator()` method:** Manages transactions through the `TransactionalOperator'.
+
+**Task:** Setting up a reactive connection to a PostgreSQL database with transaction support.
+
+---
+
+### `SecurityConfig.java`
+
+This class configures the password encryption mechanism using BCrypt.
+
+- **Annotation `@Configuration`:** Defines the class as a configuration class.
+- **The `PasswordEncoder()` method:** Returns the `PasswordEncoder` bin, which is used to encrypt passwords using the BCrypt algorithm.
+
+**Task:** Securing passwords through encryption using BCrypt.
+
+---
+
+### `TomcatConfigg.java`
+
+This class configures and runs the embedded Tomcat server.
+
+- **Annotation `@Configuration`:** Defines the class as a configuration class.
+- **Annotation `@ComponentScan`:** Scans packages to find Spring components.
+- **Annotation `@PropertySource`:** Loads configuration values from the 'appp.properties` file.
+- **The `tomcat()` method:** Configures and starts the Tomcat server on the specified port.
+
+**Task:** Configuring and running the built-in Tomcat server for the application to work.
+
+---
+
+## Node/controller
+
+The `UserController` class is a Spring controller that provides a REST API for managing users and searching for restaurants using the Foursquare service.
+
+### The main tasks of the class:
+- User management: adding users, getting a list of all users, authentication.
+- Search for restaurants via the Foursquare API.
+
+### Methods:
+
+**`addUser`**
+- **Method:** `POST /addUser`
+   - **Parameters:** `username`, `password`, `email`
+   - **Return value:** `Mono<Void>`
+   - **Description:** This method adds a new user to the system. Uses the `UserService` service to save user information (asynchronously, using `Mono').
+
+ **`getAllUsers`**
+- **Method:** `GET /allUsers`
+   - **Return value:** `Flux<String>`
+- **Description:** Returns the stream of all users of the system. Uses `UserService` to get a list of users (asynchronously, using `Flux').
+
+ **`login`**
+- **Method:** `POST /login`
+   - **Parameters:** `username`, `password`
+   - **Return value:** `Mono<Boolean>`
+   - **Description:** Authenticates the user by name and password. Returns `true` or `false` depending on authentication success (asynchronously).
+
+**`searchRestaurants`**
+- **Method:** `GET /searchRestaurants`
+   - **Parameters:**
+     - `location' (required): The location to search for.
+     - `keywords' (optional): keywords for filtering restaurants.
+     - `sort' (optional, "RELEVANCE" by default): sorting criteria.
+     - `openNow' (optional, default is `false'): filtering by the status "open now".
+     - `maxPrice' (optional, default 4): maximum price.
+     - `latitude' (optional): the latitude of the location.
+     - `longitude' (optional): the longitude of the location.
+   - **Return value:** `Mono<JsonNode>`
+   - **Description:** Searches for restaurants using the `FoursquareService` service based on the passed parameters. Returns results in JSON format (asynchronously).
+
+### Interaction with services:
+- **`UserService`:** Handles user-related operations such as adding, authenticating, and retrieving a list of users.
+- **`FoursquareService`:** Responsible for interacting with the Foursquare API for restaurant search.
+
+### The main task:
+The `UserController` class implements a controller for managing users and searching for restaurants, providing several REST API endpoints for working with users and making requests to an external service.
+
+---
+
+## Node/dao
+
+### Description of the work of the class `UserDao.java `:
+
+The `UserDao' class is a DAO (Data Access Object) that provides access to user data, preferences, allergies, and restaurant visits using reactive approaches and SQL queries via `R2dbcEntityTemplate` and `UserRepository'.
+
+### The main tasks of the class:
+- User management in the database (creation, search, deletion).
+- Manage user preferences and allergies.
+- Management of data on restaurant visits by users.
+
+### Fields:
+- **`R2dbcEntityTemplate r2dbcEntityTemplate`:** Used to execute SQL queries using the reactive API.
+- **`UserRepository userRepository`:** A repository for managing user data.
+
+### Methods:
+
+ **`saveUser(User user)`**
+   - Saves the new user in the database.
+   - Uses `UserRepository` to save the `User` object.
+
+ **`findUserByUsername(String username)`**
+- Searches for a user by username.
+   - Executes an SQL query for the search and converts the result into a 'User` object.
+
+ **`findUserByEmail(String email)`**
+   - Searches for a user by email.
+   - Executes an SQL query for the search and converts the result into a 'User` object.
+
+ **`getAllUserNames()`**
+- Returns a stream of names of all users.
+   - Executes an SQL query to get a list of all user names (username).
+
+ **`saveUserPreference(Long userId, String preference)`**
+- Saves the user's preference to the `user_preferences` table.
+
+ **`findPreferencesByUserId(Long userId)`**
+   - Returns all user preferences by their ID.
+   - Executes an SQL query to search for all user preferences.
+
+ **`deleteUserPreference(Long userId, String preference)`**
+- Deletes the user's preference by ID and preference.
+
+ **`saveUserAllergy(Long userId, String allergy)`**
+   - Saves the user's allergy to the `allergies` table.
+
+ **`findAllergiesByUserId(Long userId)`**
+   - Returns all the user's allergies by their ID.
+
+ **`deleteUserAllergy(Long userId, String allergy)`**
+    - Removes the user's allergy by his ID and the name of the allergy.
+
+ **`saveVisit(Long userId, String restaurantId)`**
+    - Saves a record of the user's visit to the restaurant in the `visits` table, with the flag `visited = false'.
+
+ **`findVisitsByUserId(Long userId)`**
+    - Returns a list of the user's restaurant visits by their ID, including the restaurant ID and the visit status.
+
+ **`updateVisitStatus(Long userId, String restaurantId, boolean visited)`**
+    - Updates the restaurant visit status (true/false) for the user.
+
+ **`deleteVisit(Long userId, String restaurantId)`**
+    - Deletes the record of a restaurant visit for the user by his ID and restaurant ID.
+
+### The main task:
+The `UserDao` class implements database access to manage users, their preferences, allergies, and restaurant visits. All operations are performed asynchronously using the reactive approach provided by Spring R2DBC.
+
+---
+
+## Node/entity
+
+These classes are entities that will be mapped to the corresponding tables in the database. They are used to work with data in the application.
+
+---
+
+### `AcceptableAllergy.java`
+
+**Table:** `acceptable_allergies`  
+**Description:** Provides a list of acceptable (allowed) allergies that can be selected by users or added to the system.
+
+- **Fields:**
+- `id` is the unique identifier of the allergy.
+  - `allergy' is the name of an allergy.
+
+- **Methods:**
+- Getters and setters for both fields.
+
+---
+
+### `Allergy.java`
+
+**Table:** `user_allergies`  
+**Description:** Stores data about users' allergies, linking the user and their allergies.
+
+- **Fields:**
+- `id` is the unique identifier of the record.
+  - `userId` is the ID of the user who added the allergy.
+  - `allergy' is the name of an allergy.
+
+- **Methods:**
+- Getters and setters for all fields.
+
+---
+
+### `AvailablePreference.java`
+
+**Table:** `available_preferences`  
+**Description:** Provides a list of available preferences that can be selected by users.
+
+- **Fields:**
+- `id` is the unique identifier of the preference.
+  - `preference' is the name of the preference.
+
+- **Methods:**
+- Getters and setters for both fields.
+
+---
+
+
+###  `Preference.java`:
+
+This class represents the "preference" entity and is mapped to the `user_preferences` table in the database. This table stores information about user preferences and their relationship to specific users.
+
+### Fields:
+
+- **`id`** is the unique identifier of the record (preferences). The field is annotated as `@Id`, which indicates that it is the primary key in the table.
+- **`userId`** is the ID of the user to whom this preference applies. This field indicates a connection with the user.
+- **`preference`** is the name of the preference. For example, it may be a category, type of product or service that the user is interested in.
+
+### Methods:
+
+- **Getters and setters:**
+- `getId()` / `setId(Long id)` — getting and setting the value for the `id` field.
+  - `getUserId()` / `setUserId(Long userId)` — getting and setting the value for the `userId` field.
+  - `getPreference()` / `setPreference(String preference)` — getting and setting the value for the `preference` field.
+
+### The main task:
+
+The `Preference` class is used to store and manage data about user preferences. The entity associates the user with specific preferences and stores this data in the 'user_preferences` table.
+
+###  **`User.java`**
+
+**Table:** `users`  
+**Description:** Represents the user of the system.
+
+- **Fields:**
+- `id` is a unique user ID.
+  - `username` is the user's name.
+  - `password' is a hashed password.
+  - `email` — the user's email address.
+
+- **Constructors:**
+Is the default constructor for frameworks such as Spring.
+  - A complete constructor for creating users with specified fields.
+
+- **Methods:**
+- Getters and setters for all fields.
+  - Redefined methods `toString()`, `equals()`, and `hashCode()` to work correctly with user objects.
+
+---
+
+###  `Visit.java`
+
+**Description:** Represents the user's visit to the restaurant.
+
+- **Fields:**
+- `restaurantId` is the unique identifier of the restaurant.
+  - `visited` — the status of the visit (Boolean value).
+
+- **Constructors:**
+- Constructor for initializing fields.
+
+- **Methods:**
+- Getters for the `restaurantId` and `visited` fields.
+
+---
+
+### The main task:
+These entities are mapped to the corresponding tables in the database, providing a link between the objects in the application and their representation in the database.
+
+---
+
+## Node/service/impl
+
+`ConsumeServiceImpl.java and ProducerServiceImpl.java `:
+
+These classes implement interaction with message outlines (RabbitMQ) in the system, organizing the processing of incoming messages (consummation) and sending responses (production).
+
+---
+
+###  `ConsumeServiceImpl.java`
+
+This class implements the 'ConsumerService` interface and is responsible for processing incoming messages from various RabbitMQ descriptions.
+
+- **Annotation `@Service`:** Indicates that the class is a Spring component and can be automatically detected and managed by the Spring container.
+- **Annotation `@Log4j2`:** Adds the ability to log using Log4j2.
+
+#### Fields:
+- **`ProducerService producerService`:** This field stores a link to the service for sending reply messages.
+
+#### Method:
+
+ **`consumeTextMessageUpdates(Update update)`**
+- Annotation '@RabbitListener (queues = TEXT_MESSAGE_UPDATE)` allows this method to subscribe to the description `TEXT_MESSAGE_UPDATE'.
+   - The method processes text messages received via RabbitMQ and logs the result.
+   - After processing, a response message is generated, which is sent via the `ProducerService'.
+
+**`consumeDocMessageUpdates(Update update)`**
+- Annotation '@RabbitListener (queues = DOC_MESSAGE_UPDATE)` allows you to subscribe to the description of `DOC_MESSAGE_UPDATE'.
+   - The method is responsible for processing documents, but so far its implementation is empty (only receiving a message is logged).
+
+ **`consumePhotoMessageUpdates(Update update)`**
+- Annotation '@RabbitListener (queues = PHOTO_MESSAGE_UPDATE)` allows you to subscribe to the description of `PHOTO_MESSAGE_UPDATE'.
+   - The method processes photo messages, logging their receipt (the implementation is being deleted for now).
+
+#### The main task:
+The 'ConsumeServiceImpl` class is responsible for consuming messages from RabbitMQ essays and processing them depending on the type (text, document, photo). For text messages, the user's response is sent via the 'produserAnswer` method.
+
+---
+
+### `ProducerServiceImpl.java`
+
+This class implements the 'ProducerService` interface and is responsible for sending messages to the RabbitMQ essay.
+
+- **Annotation `@Service`:** The class is located by the Spring component and is managed by the Spring container.
+- **Annotation `@Log4j2`:** Adds support for logging using Log4j2.
+
+#### Fields:
+- **`RabbitTemplate RabbitTemplate`:** Used to send messages to RabbitMQ. The field is passed through the constructor using the `@Autowired` annotation.
+
+#### Method:
+
+**`produserAnswer(SendMessage sendMessage)`**
+- This method sends a response message to the `ANSWER_MESSAGE` queue using the `RabbitTemplate`.
+   - **`rabbitTemplate.convertAndSend (ANSWER_MESSAGE, sendMessage)`:** Sends the `SendMessage` object to the specified characteristic.
+
+#### The main task:
+`ProducerServiceImpl` implements sending messages to the RabbitMQ essay. This class is used to send reply messages to users after processing their incoming messages.
+
+---
+
+### Interaction:
+- **'ConsumeServiceImpl`** is responsible for receiving messages from various essays and processing them. For example, when receiving a text message from the `TEXT_MESSAGE_UPDATE` queue, it uses the `ProducerService` to send a reply message.
+- **`ProducerServiceImpl`** sends response messages to the `ANSWER_MESSAGE` description so that other system components can receive and process them.
+
+Thus, both classes work together to provide asynchronous communication through RabbitMQ.
+
+---
+
+## Node/service
+
+These classes manage logic related to users, preferences, allergies, sessions, and interactions with external APIs such as Foursquare.
+
+---
+
+###  `AllergyLoaderService.java`
+
+**Task:** Loads allergies from a file and initializes the 'acceptable_allergies` table in the database.
+
+- **The `init()`** method is called when the component is initialized. Recreates the table and loads data from the file `allergies.txt `.
+- **The `recreateTable()` method** — recreates the 'acceptable_allergies` table.
+- **The `loadAllergiesFromFile()' method** — reads data from a file and stores it in a database.
+
+---
+
+###  `FoursquareService.java`
+
+**Task:** Interact with the Foursquare API to search for restaurants and get information about them.
+
+- **The `searchRestaurants()` method** — generates a query to the Foursquare API to search for restaurants according to the specified parameters (location, keywords, sorting, price, etc.).
+- **The `searchRandomRestaurant()` method** — executes a query to search for a random restaurant.
+- **The `getRestaurantLink()` method** — gets a link to a restaurant by its 'fsqId` via the Foursquare API.
+
+---
+
+###  `PreferencesLoaderService.java`
+
+**Task:** Loads preferences from a file and initializes the `available_preferences` table in the database.
+
+- **The 'init()` method** — is called during component initialization, recreates the table and loads data from the file `preferences.txt `.
+- **The `recreateTable()` method** — recreates the `available_preferences` table.
+- **The `loadPreferencesFromFile()' method** — reads data from a file and stores it in a database.
+
+---
+
+###  `SessionService.java`
+
+**Task:** Manages user sessions.
+
+- **The `isUserLoggedIn()` method** — checks whether the user is logged in based on the `chatId'.
+- **The `LoginUser()` method** — registers the user as authorized.
+- **The `logOutUser()` method** — removes the user from the list of authorized users.
+- **The `getUserId()` method** — returns the user ID by `chatId`.
+
+---
+
+### `UserService.java`
+
+**Task:** Manages user data, preferences, allergies, and restaurant visits. Interacts with repositories and services to process requests.
+
+- **Methods for working with users:**
+  - **`addUser()`** — adds a new user, checking the uniqueness of the email and username.
+  - **`authenticate()`** — verifies user authentication by username and password.
+  - **`getUserIdByUsername()`** — returns the user ID by name.
+  - **`getAllUsers()`** — returns a list of all users.
+
+- **Methods for working with preferences:**
+- **`addUserPreference()`** — adds the user's preference, checking if it has already been added.
+  - **`getUserPreferences()`** — returns all user preferences.
+  - **`deleteUserPreference()`** — deletes the user's preference.
+
+- **Methods for dealing with allergies:**
+- **`addUserAllergy()`** — adds an allergy to the user, checking if it has already been added.
+  - **`getUserAllergies()`** — returns all the user's allergies.
+  - **`deleteUserAllergy()`** — removes the user's allergy.
+  - **`isAcceptableAllergy()`** — checks whether the allergy is acceptable (whether it is present in the `acceptable_allergies` table).
+
+- **Methods for working with visits:**
+- **`addVisit()`** — adds a restaurant visit for the user.
+  - **`getVisitList()`** — returns the list of user visits.
+  - **`markVisited()`** — marks the restaurant as visited.
+  - **`removeVisit()`** — deletes the record of the restaurant visit.
+
+- **Methods for working with restaurants via the Foursquare API:**
+- **`findRestaurant()`** — searches for restaurants.
+  - **`requestRandomRestaurant()`** — searches for a random restaurant.
+
+---
+
+### The main task:
+Classes provide various services for working with users, preferences, allergies, restaurant visits, as well as interacting with external APIs.
+
+---
+## Node/NodeApplication.java
+
+The 'NodeApplication` class is the entry point for launching a Spring application that uses several configuration classes to configure various components such as RabbitMQ, Tomcat, and a database. This class manually initializes the Spring context using the `AnnotationConfigApplicationContext'.
+
+### Basic elements:
+
+ **`AnnotationConfigApplicationContext`**:
+- This class is used to create a Spring context based on Java configurations.
+   - Configuration classes are passed to the constructor arguments, which will be used to configure the application components.
+
+**Configuration classes:**
+- **`RabbitMQConfigg`** — configuration for RabbitMQ.
+   - **`RabbitConfigurationn`** — additional configuration for RabbitMQ.
+   - **`TomcatConfigg`** — configuration for the embedded Tomcat server.
+   - **`DatabaseConfig`** — configuration for connecting to a database using JDBC.
+   - **`ReactiveDatabaseConfig`** — a reactive configuration for connecting to a database using R2DBC.
+
+ **Starting Tomcat**:
+- After initializing the context, the `TomcatConfigg` bin is extracted to make sure that the Tomcat server is properly configured and running.
+
+### Tasks:
+
+**Initializing the Spring context**:
+- The application uses several configuration classes to configure databases, RabbitMQ and the embedded Tomcat server.
+   - `AnnotationConfigApplicationContext` initializes all these classes and components in the Spring context.
+
+ **Launching Tomcat**:
+   - In the last line, the `TomcatConfigg` bean is extracted, which indicates that the application runs the embedded Tomcat server if it has been configured correctly.
+
+### The main task:
+The 'NodeApplication` class launches the application by creating a Spring context and configuring key components such as RabbitMQ, database, and Tomcat server using Java configurations.
+
+---
+
+## Resource:
+The resource files store default values for allergies and preferences, as well as data for accessing the broker, database, api, and so on.
+
+---
