@@ -14,9 +14,45 @@ import static org.example.model.RabbitQueue.*;
 @Log4j2
 public class ConsumeServiceImpl implements ConsumerService {
     private final ProducerService producerService;
+    private static FourArray finiteStateMachine;
 
     public ConsumeServiceImpl(ProducerService producerService) {
         this.producerService = producerService;
+        this.finiteStateMachine = new FourArray();
+
+        finiteStateMachine.add(new FourArray.Foure(0,"", 1,""));
+        finiteStateMachine.add(new FourArray.Foure(0,"", 2,""));
+        finiteStateMachine.add(new FourArray.Foure(0,"", 3,""));
+        finiteStateMachine.add(new FourArray.Foure(0,"", 4,""));
+        finiteStateMachine.add(new FourArray.Foure(0,"", 5,""));
+        finiteStateMachine.add(new FourArray.Foure(1,"", 0,""));
+        finiteStateMachine.add(new FourArray.Foure(1,"", 1,""));
+        finiteStateMachine.add(new FourArray.Foure(1,"", 1,""));
+        finiteStateMachine.add(new FourArray.Foure(1,"", 1,""));
+        finiteStateMachine.add(new FourArray.Foure(2,"", 0,""));
+        finiteStateMachine.add(new FourArray.Foure(2,"", 2,""));
+        finiteStateMachine.add(new FourArray.Foure(2,"", 2,""));
+        finiteStateMachine.add(new FourArray.Foure(2,"", 2,""));
+        finiteStateMachine.add(new FourArray.Foure(3,"", 0,""));
+        finiteStateMachine.add(new FourArray.Foure(3,"", 3,""));
+        finiteStateMachine.add(new FourArray.Foure(3,"", 3,""));
+        finiteStateMachine.add(new FourArray.Foure(3,"", 3,""));
+        finiteStateMachine.add(new FourArray.Foure(4,"", 0,"")); finiteStateMachine.add(new FourArray.Foure(0,"", 1,""));
+        finiteStateMachine.add(new FourArray.Foure(4,"", 4,""));
+        finiteStateMachine.add(new FourArray.Foure(4,"", 4,""));
+        finiteStateMachine.add(new FourArray.Foure(4,"", 4,""));
+        finiteStateMachine.add(new FourArray.Foure(5,"", 0,""));
+        finiteStateMachine.add(new FourArray.Foure(5,"", 5,""));
+        finiteStateMachine.add(new FourArray.Foure(5,"", 6,""));
+        finiteStateMachine.add(new FourArray.Foure(6,"", 5,""));
+        finiteStateMachine.add(new FourArray.Foure(6,"", 7,""));
+        finiteStateMachine.add(new FourArray.Foure(7,"", 0,""));
+        finiteStateMachine.add(new FourArray.Foure(7,"", 7,""));
+        finiteStateMachine.add(new FourArray.Foure(7,"", 8,""));
+        finiteStateMachine.add(new FourArray.Foure(8,"", 7,""));
+        finiteStateMachine.add(new FourArray.Foure(8,"", 8,""));
+        finiteStateMachine.add(new FourArray.Foure(8,"", 8,""));
+
     }
 
     @Override
