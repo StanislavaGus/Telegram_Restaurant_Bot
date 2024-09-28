@@ -181,7 +181,8 @@ public class Bot extends TelegramLongPollingBot {
                 } else if (messageText.equals("/help")) {
                     sendHelpMessage(chatId);
                 } else if (messageText.startsWith("/register")) {
-                    handleRegisterCommand(chatId, messageText);
+                    int messageId = update.getMessage().getMessageId();
+                    handleRegisterCommand(chatId, messageText, messageId);
                 } else if (messageText.startsWith("/login")) {
                     int messageId = update.getMessage().getMessageId();
                     handleLoginCommand(chatId, messageText, messageId);
@@ -1053,7 +1054,7 @@ public class Bot extends TelegramLongPollingBot {
     }
 
 
-    private void handleRegisterCommand(long chatId, String messageText) {
+    private void handleRegisterCommand(long chatId, String messageText, int messageId) {
         String[] parts = messageText.split(" ");
         if (parts.length == 4) {
             String username = parts[1];
@@ -1061,7 +1062,7 @@ public class Bot extends TelegramLongPollingBot {
             String email = parts[3];
 
             userService.addUser(username, password, email)
-                    .doOnSuccess(aVoid -> sendMessage(chatId, "Registration successful!"))
+                    .doOnSuccess(aVoid -> sendMessageAndDelete(chatId, messageId, "Registration successful!"))
                     .doOnError(throwable -> {
                         log.error("Registration failed", throwable);
                         String errorMessage = throwable.getMessage().contains("User already exists") ?
@@ -1071,7 +1072,10 @@ public class Bot extends TelegramLongPollingBot {
                     })
                     .subscribe();
         } else {
-            sendMessage(chatId, "Invalid format. Use: /register username password email");
+            sendMessage(chatId, "To register, please write the following message\n" +
+                    "/register username password email\n" +
+                    "Example: /register Anna 12345 anna123@gmail.com\n\n" +
+                    "For your privacy, after registration all your personal data will be deleted from the chat");
         }
     }
 
@@ -1087,6 +1091,14 @@ public class Bot extends TelegramLongPollingBot {
             log.error("Failed to delete message", e);
         }
     }
+
+    public void sendMessageAndDelete(long chatId, int messageId, String messange) {
+
+        sendMessage(chatId, messange);
+        deleteMessage(chatId, messageId);
+    }
+
+
 
     private void handleLoginCommand(long chatId, String messageText, int messageId) {
         if (sessionService.isUserLoggedIn(chatId)) {
@@ -1127,7 +1139,10 @@ public class Bot extends TelegramLongPollingBot {
                     })
                     .subscribe();
         } else {
-            sendMessage(chatId, "Invalid format. Use: /login username password");
+            sendMessage(chatId, "To log in, please write the following message\n" +
+                    "/login username password\n" +
+                    "Example: /login Anna 12345\n\n" +
+                    "For your privacy, after authentication, all your personal data will be deleted from the chat");
         }
     }
 
