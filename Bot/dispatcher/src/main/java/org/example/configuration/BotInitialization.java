@@ -13,12 +13,10 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
 @Component
 public class BotInitialization {
-    private final BotConfiguration botConfig;
-    private AnnotationConfigApplicationContext context;
+    private final AnnotationConfigApplicationContext context;
 
     @Autowired
-    public BotInitialization(BotConfiguration botConfig, AnnotationConfigApplicationContext context){
-        this.botConfig = botConfig;
+    public BotInitialization(AnnotationConfigApplicationContext context){
         this.context = context;
     }
 

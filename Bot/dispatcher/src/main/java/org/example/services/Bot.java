@@ -34,7 +34,6 @@ import java.util.*;
 public class Bot extends TelegramLongPollingBot {
 
     private final BotConfiguration config;
-    private final AnnotationConfigApplicationContext context;
     private final UpdateController updateController;
     private final UserService userService;
     private final SessionService sessionService;
@@ -59,11 +58,9 @@ public class Bot extends TelegramLongPollingBot {
     private final Map<Long, SearchParameters> userSearchParameters = new HashMap<>();
 
 
-
     @Autowired
-    public Bot(BotConfiguration botConfig, AnnotationConfigApplicationContext context, UpdateController updateController, UserService userService, SessionService sessionService, FoursquareService foursquareService, AvailablePreferencesRepository availablePreferencesRepository, AcceptableAllergiesRepository acceptableAllergiesRepository) {
+    public Bot(BotConfiguration botConfig, UpdateController updateController, UserService userService, SessionService sessionService, FoursquareService foursquareService, AvailablePreferencesRepository availablePreferencesRepository, AcceptableAllergiesRepository acceptableAllergiesRepository) {
         this.config = botConfig;
-        this.context = context;
         this.updateController = updateController;
         this.userService = userService;
         this.sessionService = sessionService;
@@ -132,27 +129,22 @@ public class Bot extends TelegramLongPollingBot {
                     sendMessage(chatId, "Your location: " + latitude + ", " + longitude);
 
                     locationButtonPushed(chatId);
-                }
-                else if (choosingCityFlag) {
+                } else if (choosingCityFlag) {
                     sendMessage(chatId, "You Enter - " + messageText);
                     SearchParameters params = userSearchParameters.computeIfAbsent(chatId, k -> new SearchParameters());
 
                     // Сохраняем город для буферизации
                     params.setNear(messageText);
                     this.choosingCityFlag = false;
-                }
-
-                else if (choosingDistanceFlag) {
+                } else if (choosingDistanceFlag) {
                     Double distance = Double.parseDouble(messageText);
-                    sendMessage(chatId, "You Enter - " + distance +"m");
+                    sendMessage(chatId, "You Enter - " + distance +" m");
 
                     SearchParameters params = userSearchParameters.computeIfAbsent(chatId, k -> new SearchParameters());
 
                     params.setArea(distance);
                     this.choosingDistanceFlag = false;
-                }
-
-                else if (enterPrefencesFlag) {
+                } else if (enterPrefencesFlag) {
                     sendMessage(chatId, "You Enter - " + messageText);
 
                     this.enterPrefencesFlag = false;
@@ -169,9 +161,7 @@ public class Bot extends TelegramLongPollingBot {
                         params.setQuery(currentQuery + "," + cleanedInput); // Если есть значение, добавляем новое через запятую
                     }
 
-                }
-
-                else if (enterAllergyFlag) {
+                } else if (enterAllergyFlag) {
                     sendMessage(chatId, "You Enter - " + messageText);
 
                     this.enterAllergyFlag = false;
@@ -186,10 +176,7 @@ public class Bot extends TelegramLongPollingBot {
                     } else {
                         params.setAllergy(currentAllergy + "," + cleanedInput); // Если есть значение, добавляем новое через запятую
                     }
-                }
-
-
-                else if (messageText.equals("/start")) {
+                } else if (messageText.equals("/start")) {
                     sendMainMenu(chatId);
                 } else if (messageText.equals("/help")) {
                     sendHelpMessage(chatId);
@@ -201,63 +188,45 @@ public class Bot extends TelegramLongPollingBot {
                 } else if (messageText.startsWith("/logout")) {
                     handleLogoutCommand(chatId);
                 }  else if (messageText.startsWith("/viewprefs")) {
-                    handleViewPreferencesCommand(chatId);}
-
-
-                else if (messageText.startsWith("/addpref")) {
+                    handleViewPreferencesCommand(chatId);
+                } else if (messageText.startsWith("/addpref")) {
                     sendMessage(chatId, "If there are many preferences to add, you must enter them separated by commas." +
                             "\nExample: coffee,tea,...");
-                    this.addPrefFlag = true;}
-
-                else if (addPrefFlag) {
+                    this.addPrefFlag = true;
+                } else if (addPrefFlag) {
                     this.addPrefFlag = false;
                     handleAddPreferenceCommand(chatId, messageText);
-                }
-
-                else if (messageText.startsWith("/delpref")) {
+                } else if (messageText.startsWith("/delpref")) {
                     sendMessage(chatId, "If there are many preferences to delete, you must enter them separated by commas." +
                             "\nExample: coffee,tea,...");
-                    this.delPrefFlag = true;}
-
-                else if (delPrefFlag) {
+                    this.delPrefFlag = true;
+                } else if (delPrefFlag) {
                     this.delPrefFlag = false;
                     handleDeletePreferenceCommand(chatId, messageText);
-                }
-
-
-                else if (messageText.startsWith("/addallergy")) {
+                } else if (messageText.startsWith("/addallergy")) {
                     sendMessage(chatId, "If there are many allergies to add, you must enter them separated by commas." +
                             "\nExample: tomatoes,strawberry,...");
-                    this.addAllergyFlag = true;}
-
-                else if (addAllergyFlag) {
+                    this.addAllergyFlag = true;
+                } else if (addAllergyFlag) {
                     this.addAllergyFlag = false;
                     handleAddAllergyCommand(chatId, messageText);
-                }
-
-                else if (messageText.startsWith("/delallergy")) {
+                } else if (messageText.startsWith("/delallergy")) {
                     sendMessage(chatId, "If there are many allergies to delete, you must enter them separated by commas." +
                             "\nExample: tomatoes,strawberry,...");
-                    this.delAllergyFlag = true;}
-
-                else if (delAllergyFlag) {
+                    this.delAllergyFlag = true;
+                } else if (delAllergyFlag) {
                     this.delAllergyFlag = false;
                     handleDeleteAllergyCommand(chatId, messageText);
-                }
-
-                else if (messageText.startsWith("/viewallergies")) {
+                } else if (messageText.startsWith("/viewallergies")) {
                     handleViewAllergiesCommand(chatId);
-
                 } else if (messageText.startsWith("/findrestaurant")) {
                     handleFindRestaurantCommand(chatId);
-
                 } else if (messageText.startsWith("Location")) {
                     locationButtonPushed(chatId);
                 } else if (messageText.startsWith("Search Filters")) {
                     searchFiltersButtonPushed(chatId);
                 } else if (messageText.startsWith("Start Searching")) {
                     startSearching(chatId);
-
                 } else if (messageText.startsWith("Send my location")) {
                     sendMyLocation(chatId);
                 } else if (messageText.startsWith("Choose city")) {
@@ -266,12 +235,10 @@ public class Bot extends TelegramLongPollingBot {
                     chooseDistance(chatId);
                 } else if (messageText.startsWith("Go to Searching Menu")) {
                     removeKeyboard(chatId);
-                    handleFindRestaurantCommand(chatId);}
-
-
-                else if (messageText.startsWith("Preferences")) {
-                    preferences(chatId);}
-                else if (messageText.startsWith("Allergy")) {
+                    handleFindRestaurantCommand(chatId);
+                } else if (messageText.startsWith("Preferences")) {
+                    preferences(chatId);
+                } else if (messageText.startsWith("Allergy")) {
                     allergy(chatId);}
 
 
@@ -322,17 +289,11 @@ public class Bot extends TelegramLongPollingBot {
                     SearchParameters params = userSearchParameters.computeIfAbsent(chatId, k -> new SearchParameters());
 
                     params.setOpenNow(result);
-                }
-
-
-                else if (messageText.startsWith("/randomrestaurant")) {
+                } else if (messageText.startsWith("/randomrestaurant")) {
                     handleRandomRestaurantCommand(chatId, messageText);
-
-
                 } else if (messageText.startsWith("/visitlist")) {
                     handleVisitListCommand(chatId);
-                }
-                else if (messageText.startsWith("/showlist")) {
+                } else if (messageText.startsWith("/showlist")) {
                     handleShowListCommand(chatId);
                 }
 

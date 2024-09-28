@@ -5,7 +5,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.*;
 
 @Configuration
-@ComponentScan(basePackages = {"org.node"})
 @PropertySource("classpath:appp.properties")
 public class TomcatConfigg {
 
