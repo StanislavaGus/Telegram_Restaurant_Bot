@@ -20,32 +20,16 @@ import reactor.core.publisher.Mono;
 public class UserService {
 
     private final UserDao userDao;
-    private final AvailablePreferencesRepository availablePreferencesRepository;
-    private final AllergiesRepository allergiesRepository;
-    private final PreferencesRepository preferencesRepository;
-    private final AcceptableAllergiesRepository acceptableAllergiesRepository;
     private final PasswordEncoder passwordEncoder;
     private final FoursquareService foursquareService;
 
     @Autowired
-    public UserService(UserDao userDao, AvailablePreferencesRepository availablePreferencesRepository,
-                       AllergiesRepository allergiesRepository, PreferencesRepository preferencesRepository, AcceptableAllergiesRepository acceptableAllergiesRepository, PasswordEncoder passwordEncoder, FoursquareService foursquareService) {
+    public UserService(UserDao userDao, PasswordEncoder passwordEncoder, FoursquareService foursquareService) {
         this.userDao = userDao;
-        this.availablePreferencesRepository = availablePreferencesRepository;
-        this.allergiesRepository = allergiesRepository;
-        this.preferencesRepository = preferencesRepository;
-        this.acceptableAllergiesRepository = acceptableAllergiesRepository;
         this.passwordEncoder = passwordEncoder;
         this.foursquareService = foursquareService;
     }
 
-    public Mono<JsonNode> findRestaurant(String location, String keywords, String sort, Boolean openNow, Integer maxPrice, Double latitude, Double longitude) {
-        return foursquareService.searchRestaurants(location, keywords, sort, openNow, maxPrice, latitude, longitude);
-    }
-
-    public Mono<JsonNode> requestRandomRestaurant(String location, String area) {
-        return foursquareService.searchRandomRestaurant(location, area);
-    }
     public Mono<Void> addUser(String username, String password, String email) {
         return userDao.findUserByEmail(email)
                 .flatMap(existingUser -> Mono.error(new IllegalArgumentException("User with such an email already exists!")))
@@ -79,72 +63,52 @@ public class UserService {
     }
 
     public Mono<Void> addUserPreference(Long userId, String preference) {
-        return preferencesRepository.findByUserId(userId)
-                .filter(existingPreference -> existingPreference.getPreference().equalsIgnoreCase(preference))
+        return userDao.findPreferencesByUserId(userId)
+                .filter(existingPreference -> existingPreference.equalsIgnoreCase(preference))
                 .hasElements()
                 .flatMap(isAlreadyAdded -> {
                     if (isAlreadyAdded) {
                         return Mono.error(new IllegalArgumentException("Preference already added for user"));
                     } else {
-                        Preference newPreference = new Preference();
-                        newPreference.setUserId(userId);
-                        newPreference.setPreference(preference);
-                        return preferencesRepository.save(newPreference).then();
+                        return userDao.saveUserPreference(userId, preference);
                     }
                 });
     }
 
-
-
     public Flux<String> getUserPreferences(Long userId) {
-        return preferencesRepository.findByUserId(userId)
-                .map(Preference::getPreference);
+        return userDao.findPreferencesByUserId(userId);
     }
-
 
     public Mono<Void> deleteUserPreference(Long userId, String preference) {
         return userDao.deleteUserPreference(userId, preference);
     }
 
     public Mono<Void> addUserAllergy(Long userId, String allergy) {
-        return allergiesRepository.findByUserId(userId)
-                .filter(existingAllergy -> existingAllergy.getAllergy().equalsIgnoreCase(allergy))
+        return userDao.findAllergiesByUserId(userId)
+                .filter(existingAllergy -> existingAllergy.equalsIgnoreCase(allergy))
                 .hasElements()
                 .flatMap(isAlreadyAdded -> {
                     if (isAlreadyAdded) {
                         return Mono.error(new IllegalArgumentException("Allergy already added for user"));
                     } else {
-                        Allergy newAllergy = new Allergy();
-                        newAllergy.setUserId(userId);
-                        newAllergy.setAllergy(allergy); // Сохраняем аллергию как есть
-                        return allergiesRepository.save(newAllergy).then();
+                        return userDao.saveUserAllergy(userId, allergy);
                     }
                 });
     }
 
-
-
     public Flux<String> getUserAllergies(Long userId) {
-        return allergiesRepository.findByUserId(userId)
-                .map(Allergy::getAllergy);
+        return userDao.findAllergiesByUserId(userId);
     }
 
-    public Mono<Void> deleteUserAllergy(Long userId, String allergy) {
-        return allergiesRepository.findByUserId(userId)
-                .filter(existingAllergy -> existingAllergy.getAllergy().equalsIgnoreCase(allergy))
+    public Mono<String> deleteUserAllergy(Long userId, String allergy) {
+        return userDao.findAllergiesByUserId(userId)
+                .filter(existingAllergy -> existingAllergy.equalsIgnoreCase(allergy))
                 .singleOrEmpty()
                 .flatMap(existingAllergy ->
-                        allergiesRepository.delete(existingAllergy)
-                                .then(Mono.just("Allergy deleted successfully!"))
+                        userDao.deleteUserAllergy(userId, allergy)
+                                .thenReturn("Allergy deleted successfully!")
                 )
-                .switchIfEmpty(Mono.error(new IllegalArgumentException("Allergy not found for user")))
-                .then();
-    }
-
-    public Mono<Boolean> isAcceptableAllergy(String allergy) {
-        return acceptableAllergiesRepository.findAll()
-                .filter(acceptableAllergy -> acceptableAllergy.getAllergy().equalsIgnoreCase(allergy))
-                .hasElements();
+                .switchIfEmpty(Mono.error(new IllegalArgumentException("Allergy not found for user")));
     }
 
     public Mono<Void> addVisit(Long userId, String restaurantId) {
@@ -155,10 +119,9 @@ public class UserService {
         return userDao.findVisitsByUserId(userId);
     }
 
-
     public Mono<Boolean> markVisited(Long userId, String restaurantId) {
         return userDao.findVisitsByUserId(userId)
-                .filter(visit -> visit.getRestaurantId().equals(restaurantId))  // убедитесь, что visit — это объект с полем restaurantId
+                .filter(visit -> visit.getRestaurantId().equals(restaurantId))
                 .hasElements()
                 .flatMap(exists -> {
                     if (exists) {
@@ -170,10 +133,7 @@ public class UserService {
                 });
     }
 
-
-
     public Mono<Void> removeVisit(Long userId, String restaurantId) {
         return userDao.deleteVisit(userId, restaurantId);
     }
-
 }

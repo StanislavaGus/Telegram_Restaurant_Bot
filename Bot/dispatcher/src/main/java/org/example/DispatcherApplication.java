@@ -11,7 +11,6 @@ public class DispatcherApplication {
     public static void main(String[] args) throws TelegramApiException {
         // Инициализация контекста с профилями dispatcher и node
         AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
-        context.getEnvironment().setActiveProfiles("dispatcher", "node");
         context.register(DispatcherConfiguration.class, NodeConfiguration.class);
         context.refresh();
 

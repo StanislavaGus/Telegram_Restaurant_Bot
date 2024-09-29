@@ -5,7 +5,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.*;
 
 @Configuration
-@PropertySource("classpath:appp.properties")
 public class TomcatConfigg {
 
     @Value("${server.port}")

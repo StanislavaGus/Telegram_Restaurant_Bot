@@ -6,4 +6,5 @@ import reactor.core.publisher.Flux;
 
 public interface PreferencesRepository extends ReactiveCrudRepository<Preference, Long> {
     Flux<Preference> findByUserId(Long userId);
+    Flux<Preference> findByUserIdAndPreference(Long userId, String preference);
 }

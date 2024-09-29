@@ -3,7 +3,7 @@ package org.node.entity;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 
-@Table("user_preferences")  // Таблица для хранения предпочтений и их связи с пользователями
+@Table("user_preferences")
 public class Preference {
 
     @Id

@@ -20,7 +20,6 @@ public class SchemaInitializer {
     @PostConstruct
     public void init() {
         createUsersTable()
-                .then(createVisitListTable())
                 .then(createVisitsTable())
                 .then(createAcceptableAllergiesTable())
                 .then(createAvailablePreferencesTable())
@@ -38,15 +37,6 @@ public class SchemaInitializer {
         return databaseClient.sql(sql).then();
     }
 
-    private Mono<Void> createVisitListTable() {
-        String sql = "CREATE TABLE IF NOT EXISTS visit_list (" +
-                "id SERIAL PRIMARY KEY, " +
-                "user_id INTEGER NOT NULL, " +
-                "restaurant VARCHAR(250) NOT NULL, " +
-                "visited BOOLEAN DEFAULT FALSE, " +
-                "FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE)";
-        return databaseClient.sql(sql).then();
-    }
 
     private Mono<Void> createVisitsTable() {
         String sql = "CREATE TABLE IF NOT EXISTS visits (" +

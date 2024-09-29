@@ -11,7 +11,6 @@ import org.springframework.context.annotation.PropertySource;
 
 @Configuration
 @ComponentScan(basePackages = {"org.example", "org.node"})
-@PropertySource("classpath:app.properties")
 public class BotConfiguration {
     @Value("${botConfig.name}")
     private String name;
