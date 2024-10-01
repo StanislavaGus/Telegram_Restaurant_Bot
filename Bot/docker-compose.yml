@@ -10,22 +10,13 @@ services:
     ports:
       - "8088:8088"
     depends_on:
-      - postgres-db
-      - rabbitmq
+      postgres-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     networks:
       - my_network
-    environment:
-      - SPRING_R2DBC_URL=r2dbc:postgresql://postgres-db:5432/postgres
-      - SPRING_R2DBC_USERNAME=userok
-      - SPRING_R2DBC_PASSWORD=12345
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/postgres
-      - SPRING_DATASOURCE_USERNAME=userok
-      - SPRING_DATASOURCE_PASSWORD=12345
-      - SPRING_RABBITMQ_HOST=my_rabbitmq
-      - SPRING_RABBITMQ_PORT=5672
-      - SPRING_RABBITMQ_USERNAME=userok
-      - SPRING_RABBITMQ_PASSWORD=p@ssw0rd
-      - FOURSQUARE_API_KEY=fsq3SltC/PKY6e1XzBrB4qgrYeKRiVFTV/bvcVrTXdk5NdI=
+
 
   postgres-db:
     image: postgres:14
@@ -40,6 +31,11 @@ services:
       - "5432:5432"
     networks:
       - my_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U userok -d postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -52,6 +48,11 @@ services:
       RABBITMQ_DEFAULT_PASS: p@ssw0rd
     networks:
       - my_network
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres-data:

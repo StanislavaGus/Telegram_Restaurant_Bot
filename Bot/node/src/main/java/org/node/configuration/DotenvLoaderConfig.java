@@ -1,6 +1,7 @@
 package org.node.configuration;
 
 import io.github.cdimascio.dotenv.Dotenv;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
@@ -14,6 +15,7 @@ public class DotenvLoaderConfig {
 
     private final ConfigurableEnvironment environment;
 
+    @Autowired
     public DotenvLoaderConfig(ConfigurableEnvironment environment) {
         this.environment = environment;
     }

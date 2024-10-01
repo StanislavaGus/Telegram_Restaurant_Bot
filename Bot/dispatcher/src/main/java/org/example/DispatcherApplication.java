@@ -9,7 +9,6 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 public class DispatcherApplication {
 
     public static void main(String[] args) throws TelegramApiException {
-        // Инициализация контекста с профилями dispatcher и node
         AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
         context.register(DispatcherConfiguration.class, NodeConfiguration.class);
         context.refresh();

@@ -34,16 +34,21 @@ public class ReactiveDatabaseConfig extends AbstractR2dbcConfiguration {
     @Value("${spring.r2dbc.password}")
     private String password;
 
+    @Value("${spring.r2dbc.host}")
+    private String host;
+
+    @Value("${spring.r2dbc.dbname}")
+    private String dbname;
+
     @Override
     @Bean
     public ConnectionFactory connectionFactory() {
-        log.debug("Creating ConnectionFactory with URL: {}, Username: {}", url, username);
+        log.info("Creating ConnectionFactory with URL: {}, Username: {}", url, username);
         return ConnectionFactories.get(ConnectionFactoryOptions.builder()
                 .option(DRIVER, "postgresql")
-                .option(PROTOCOL, "r2dbc")
-                .option(HOST, "localhost")
+                .option(HOST, host)
                 .option(PORT, 5432)
-                .option(DATABASE, "postgres")
+                .option(DATABASE, dbname)
                 .option(USER, username)
                 .option(PASSWORD, password)
                 .build());
