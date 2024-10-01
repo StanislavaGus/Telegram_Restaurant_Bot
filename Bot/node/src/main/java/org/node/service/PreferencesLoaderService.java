@@ -1,5 +1,6 @@
 package org.node.service;
 
+import lombok.extern.log4j.Log4j2;
 import org.node.entity.AvailablePreference;
 import org.node.repository.AvailablePreferencesRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,7 @@ import org.springframework.r2dbc.core.DatabaseClient;
 import reactor.core.publisher.Mono;
 
 @Service
+@Log4j2
 public class PreferencesLoaderService {
 
     private final AvailablePreferencesRepository availablePreferencesRepository;
@@ -32,8 +34,8 @@ public class PreferencesLoaderService {
     public void init() {
         recreateTable()
                 .then(loadPreferencesFromFile("/preferences.txt"))
-                .doOnSuccess(aVoid -> System.out.println("Preferences loaded successfully"))
-                .doOnError(throwable -> System.err.println("Failed to load preferences: " + throwable.getMessage()))
+                .doOnSuccess(aVoid -> log.info("Preferences loaded successfully"))
+                .doOnError(throwable -> log.error("Failed to load preferences: " + throwable.getMessage()))
                 .subscribe();
     }
 

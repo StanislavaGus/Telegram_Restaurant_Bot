@@ -1,5 +1,6 @@
 package org.node.service;
 
+import lombok.extern.log4j.Log4j2;
 import org.node.entity.AcceptableAllergy;
 import org.node.repository.AcceptableAllergiesRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@Log4j2
 public class AllergyLoaderService {
 
     private final AcceptableAllergiesRepository acceptableAllergiesRepository;
@@ -31,8 +33,8 @@ public class AllergyLoaderService {
     public void init() {
         recreateTable()
                 .then(loadAllergiesFromFile("/allergies.txt"))
-                .doOnSuccess(aVoid -> System.out.println("Allergies loaded successfully"))
-                .doOnError(throwable -> System.err.println("Error loading allergies: " + throwable.getMessage()))
+                .doOnSuccess(aVoid -> log.info("Allergies loaded successfully"))
+                .doOnError(throwable -> log.error("Error loading allergies: " + throwable.getMessage()))
                 .subscribe();
     }
 

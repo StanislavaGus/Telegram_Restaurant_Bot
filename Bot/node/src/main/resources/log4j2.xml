@@ -19,6 +19,18 @@
     </Appenders>
 
     <Loggers>
+        <!-- Логирование для Spring R2DBC -->
+        <Logger name="org.springframework.r2dbc" level="debug" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="File"/>
+        </Logger>
+
+        <!-- Логирование для R2DBC PostgreSQL -->
+        <Logger name="io.r2dbc.postgresql" level="debug" additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="File"/>
+        </Logger>
+
         <!-- Root logger configuration with level INFO -->
         <Root level="info">
             <AppenderRef ref="Console"/>

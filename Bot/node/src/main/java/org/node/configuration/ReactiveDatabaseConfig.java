@@ -5,20 +5,25 @@ import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.ConnectionFactoryOptions;
 import static io.r2dbc.spi.ConnectionFactoryOptions.*;
 
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.r2dbc.config.AbstractR2dbcConfiguration;
+import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
+import org.springframework.data.r2dbc.dialect.DialectResolver;
+import org.springframework.data.r2dbc.dialect.PostgresDialect;
+import org.springframework.data.r2dbc.dialect.R2dbcDialect;
 import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories;
+import org.springframework.r2dbc.core.DatabaseClient;
+import org.springframework.r2dbc.core.binding.BindMarkersFactory;
+import org.springframework.r2dbc.core.binding.BindMarkersFactoryResolver;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @Configuration
 @EnableR2dbcRepositories(basePackages = "org.node.repository")
+@Log4j2
 public class ReactiveDatabaseConfig extends AbstractR2dbcConfiguration {
-
-    private static final Logger logger = LoggerFactory.getLogger(ReactiveDatabaseConfig.class);
 
     @Value("${spring.r2dbc.url}")
     private String url;
@@ -32,7 +37,7 @@ public class ReactiveDatabaseConfig extends AbstractR2dbcConfiguration {
     @Override
     @Bean
     public ConnectionFactory connectionFactory() {
-        logger.debug("Creating ConnectionFactory with URL: {}, Username: {}", url, username);
+        log.debug("Creating ConnectionFactory with URL: {}, Username: {}", url, username);
         return ConnectionFactories.get(ConnectionFactoryOptions.builder()
                 .option(DRIVER, "postgresql")
                 .option(PROTOCOL, "r2dbc")

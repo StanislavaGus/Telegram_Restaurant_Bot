@@ -25,7 +25,6 @@ public class DotenvLoaderConfig {
 
         dotenv.entries().forEach(entry -> dotenvProperties.put(entry.getKey(), entry.getValue()));
 
-        // Добавляем в Spring Environment
         environment.getPropertySources().addFirst(new MapPropertySource("dotenvProperties", dotenvProperties));
     }
 }

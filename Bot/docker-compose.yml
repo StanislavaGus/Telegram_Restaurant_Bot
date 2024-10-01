@@ -8,17 +8,17 @@ services:
     build: .
     container_name: dispatcher-app
     ports:
-      - "8084:8084"  # server.port=8084
+      - "8088:8088"
     depends_on:
       - postgres-db
       - rabbitmq
     networks:
       - my_network
     environment:
-      - SPRING_R2DBC_URL=r2dbc:postgresql://postgres-db:5432/postgres  # Добавлено r2dbc для реактивного драйвера
+      - SPRING_R2DBC_URL=r2dbc:postgresql://postgres-db:5432/postgres
       - SPRING_R2DBC_USERNAME=userok
       - SPRING_R2DBC_PASSWORD=12345
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/postgres  # JDBC URL для не реактивных операций
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/postgres
       - SPRING_DATASOURCE_USERNAME=userok
       - SPRING_DATASOURCE_PASSWORD=12345
       - SPRING_RABBITMQ_HOST=my_rabbitmq
@@ -31,9 +31,9 @@ services:
     image: postgres:14
     container_name: postgres-db
     environment:
-      POSTGRES_DB: postgres  # Matching with spring.datasource.url database
-      POSTGRES_USER: userok  # Matching with spring.datasource.username
-      POSTGRES_PASSWORD: 12345  # Matching with spring.datasource.password
+      POSTGRES_DB: postgres
+      POSTGRES_USER: userok
+      POSTGRES_PASSWORD: 12345
     volumes:
       - postgres-data:/var/lib/postgresql/data
     ports:
@@ -43,7 +43,7 @@ services:
 
   rabbitmq:
     image: rabbitmq:3-management
-    container_name: my_rabbitmq  # Измените имя контейнера
+    container_name: my_rabbitmq
     ports:
       - "5672:5672"
       - "15672:15672"

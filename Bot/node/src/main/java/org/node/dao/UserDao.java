@@ -9,7 +9,6 @@ import org.node.repository.PreferencesRepository;
 import org.node.repository.UserRepository;
 import org.node.repository.VisitRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
