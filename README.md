@@ -22,30 +22,41 @@
    - Mark restaurant as visited
    - Remove restaurant from list
 
+---
+# Run the application
 
-## Run the application 
+The application can be run by terminal command ***docker-compose up***, while containers with Rabbitmq images and databases will be started automatically in the docker.
 
-1. **Install RabbitMQ**: Download and install RabbitMQ from the official website. Ensure that the RabbitMQ service is running after installation.
+Docker image of application - https://hub.docker.com/repository/docker/marg0sav/restaurantbot/general
 
-2. **Install PostgreSQL**: Download and install PostgreSQL from the official website. After installation, create the necessary databases and users for your application.
 
-3. **Run the application**: After configuring RabbitMQ and PostgreSQL, navigate to the project directory and run the `DispatcherApplication` file to start the application. This will initialize the Spring context and connect to the required services.
+Also, if you pre-launch containers, the application can be launched through the Dispatcher Application class.
 
+---
 
 # Using example
 
 <img src="https://github.com/user-attachments/assets/d7345348-2dde-4daa-a56c-347b0e669434" width="300" />
 
 ### Registration
-<img src="https://github.com/user-attachments/assets/ac13a708-b049-4b9a-82a3-a56a33f6a7d5" width="300" />
+
+After a successful registration, the message with the password will be deleted from the chat.
+
+<img src="https://github.com/user-attachments/assets/8b70d2fe-2b73-44e5-bed5-f663a10fa65f" width="300" />
+
+<img src="https://github.com/user-attachments/assets/e6243172-8e8c-4058-bbad-d3831a5b8dde" width="300" />
+
+<img src="https://github.com/user-attachments/assets/08225ab2-4f7a-4a98-83d8-39d095cc720c" width="370" />
+
+
 
 ### Login
 
-After a successful login, the message with the password is deleted from the chat.
+After a successful login, the message with the password will be deleted from the chat.
 
-<img src="https://github.com/user-attachments/assets/0ad7cafb-f568-4b95-8233-d73f402ba9ee" width="300" />
+<img src="https://github.com/user-attachments/assets/5f7f557e-2a8f-4625-9d4a-19f35390e3ce" width="300" />
 
-<img src="https://github.com/user-attachments/assets/8fa1d96f-dab7-4769-a138-5b0a2f18ec1b" width="300" />
+<img src="https://github.com/user-attachments/assets/8ef82731-2532-474b-af3b-31cad09e2e78" width="300" />
 
 ### WishList
 <img src="https://github.com/user-attachments/assets/eebf5ab4-7aa1-45a6-b5d9-db59cfa85173" width="300" />
