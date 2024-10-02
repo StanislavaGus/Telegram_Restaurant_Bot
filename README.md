@@ -335,6 +335,7 @@ Creates a custom menu with buttons that is sent as a message to the user. The bu
 
  **deleteMessage(long chatId, int messageId)**  
 Deletes a message that contains login and password by its ID in the chat.
+
 ---
 ### Search for a restaurant
 
@@ -420,55 +421,6 @@ This class configures and runs the embedded Tomcat server.
 - **The `tomcat()` method:** Configures and starts the Tomcat server on the specified port.
 
 **Task:** Configuring and running the built-in Tomcat server for the application to work.
-
----
-
-## Node/controller
-
-The `UserController` class is a Spring controller that provides a REST API for managing users and searching for restaurants using the Foursquare service.
-
-### The main tasks of the class:
-- User management: adding users, getting a list of all users, authentication.
-- Search for restaurants via the Foursquare API.
-
-### Methods:
-
-**`addUser`**
-- **Method:** `POST /addUser`
-   - **Parameters:** `username`, `password`, `email`
-   - **Return value:** `Mono<Void>`
-   - **Description:** This method adds a new user to the system. Uses the `UserService` service to save user information (asynchronously, using `Mono').
-
- **`getAllUsers`**
-- **Method:** `GET /allUsers`
-   - **Return value:** `Flux<String>`
-- **Description:** Returns the stream of all users of the system. Uses `UserService` to get a list of users (asynchronously, using `Flux').
-
- **`login`**
-- **Method:** `POST /login`
-   - **Parameters:** `username`, `password`
-   - **Return value:** `Mono<Boolean>`
-   - **Description:** Authenticates the user by name and password. Returns `true` or `false` depending on authentication success (asynchronously).
-
-**`searchRestaurants`**
-- **Method:** `GET /searchRestaurants`
-   - **Parameters:**
-     - `location' (required): The location to search for.
-     - `keywords' (optional): keywords for filtering restaurants.
-     - `sort' (optional, "RELEVANCE" by default): sorting criteria.
-     - `openNow' (optional, default is `false'): filtering by the status "open now".
-     - `maxPrice' (optional, default 4): maximum price.
-     - `latitude' (optional): the latitude of the location.
-     - `longitude' (optional): the longitude of the location.
-   - **Return value:** `Mono<JsonNode>`
-   - **Description:** Searches for restaurants using the `FoursquareService` service based on the passed parameters. Returns results in JSON format (asynchronously).
-
-### Interaction with services:
-- **`UserService`:** Handles user-related operations such as adding, authenticating, and retrieving a list of users.
-- **`FoursquareService`:** Responsible for interacting with the Foursquare API for restaurant search.
-
-### The main task:
-The `UserController` class implements a controller for managing users and searching for restaurants, providing several REST API endpoints for working with users and making requests to an external service.
 
 ---
 
