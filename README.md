@@ -25,7 +25,7 @@
 ---
 # Run the application
 
-The application can be run by terminal command ***docker-compose up***, while containers with Rabbitmq images and databases will be started automatically in the docker.
+The application can be run by terminal command ***docker-compose up --build***, while containers with Rabbitmq images and databases will be started automatically in the docker.
 
 Docker image of application - https://hub.docker.com/repository/docker/marg0sav/restaurantbot/general
 
@@ -371,7 +371,6 @@ This class configures the HTTP client to work with the Foursquare API and provid
 
 This class is responsible for configuring components and repositories specific to the `node` profile.
 
-- **Annotation `@Profile("node")`:** Indicates that this configuration is activated only when using the `node` profile.
 - **Annotation `@ComponentScan`:** Scans packages to find Spring components.
 - **Annotation `@EnableR2dbcRepositories`:** Includes support for reactive repositories for working with the database via R2DBC.
 
@@ -385,10 +384,6 @@ This class configures a reactive connection to a PostgreSQL database using R2DBC
 
 - **Annotation `@EnableTransactionManagement`:** Enables transaction management.
 - **The `ConnectionFactory()` method:** Creates a reactive connection factory (`ConnectionFactory') for working with PostgreSQL via R2DBC.
-- **The `databaseClient()` method:** Returns `DatabaseClient`, which is used to make queries to the database.
-- **The `r2dbcEntityTemplate()` method:** Provides a reactive template for working with entities.
-- **The `TransactionManager()` method:** Creates a transaction manager to manage reactive transactions.
-- **The `transactionalOperator()` method:** Manages transactions through the `TransactionalOperator'.
 
 **Task:** Setting up a reactive connection to a PostgreSQL database with transaction support.
 
