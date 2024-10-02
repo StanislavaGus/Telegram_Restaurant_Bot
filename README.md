@@ -118,7 +118,6 @@ This file is responsible for initializing and registering the bot in the Telegra
 
 ### `DispatcherConfiguration.java`
 This file is a configuration class for Spring with the `dispatcher` profile:
-- Marked with the annotation `@Profile("dispatcher")`, which means that this configuration will be activated only if the `dispatcher` profile is enabled.
 - The annotation `@ComponentScan` indicates to Spring the need to scan packages to find components and beans.
 
 **Task:** Defining the configuration for the `dispatcher` profile, allowing you to activate certain components only for this profile.
@@ -128,7 +127,7 @@ This file is a configuration class for Spring with the `dispatcher` profile:
 ###  `TomcatConfig.java`
 This file configures the built-in Tomcat server:
 - The class is marked with the annotation `@Configuration`, which indicates that it is a configuration class.
-- The `ServerPort` field is initialized with the value from the properties file with the default value `8084'.
+- The `ServerPort` field is initialized with the value from the properties file with the default value `8088'.
 - The `tomcat()` method is marked with the `@Bean` annotation, creating and configuring an instance of the Tomcat server. The server starts with the specified port, initializes and returns.
 
 **Task:** Configuring and launching the embedded Tomcat server with the specified port for the web application.
@@ -136,6 +135,7 @@ This file configures the built-in Tomcat server:
 ---
 
 These files jointly configure the Telegram bot via Spring, manage configuration profiles, and run the Tomcat server to service the application.
+
 ---
 ## Dispatcher/controller
 
@@ -183,11 +183,13 @@ is the main method for processing incoming updates. Checks if the update is `nul
 
 ### The main task of the class:
 The UpdateController class is responsible for receiving updates from Telegram, distributing them by type (text, document, photo), sending appropriate notifications to users and transferring updates for further processing to the queue.
+
 ---
 
 ---
 ## RabbitMQ
 The RabbitMQ message broker has been added to the project, however, queues are formed on this version, but are not used. It will be updated in the future.
+
 ---
 
 ## Dispatcher/service
@@ -300,6 +302,7 @@ Creates a custom menu with buttons that is sent as a message to the user. The bu
 
 **handleRemoveVisitCommand(long chatId, String messageText)**  
    Removes a restaurant from the user's list of visits. If the restaurant is not found, a corresponding message is displayed.   
+   
 ---
 ### Preferences
 
@@ -310,7 +313,8 @@ Creates a custom menu with buttons that is sent as a message to the user. The bu
     Displays a list of the user's allergies. If there are no allergies, a corresponding message is displayed.
 
  **handleDeleteAllergyCommand(long chatId, String messageText)**  
-    Removes the specified allergies from the user's profile.   
+    Removes the specified allergies from the user's profile.  
+    
 ---
 ### Allergies
 
@@ -355,19 +359,6 @@ DispatcherApplication class.java is the entry point for launching an application
 ---
 
 ## Node/cofiguration
-
-###  `DatabaseConfig.java`
-
-This class configures the connection to the PostgreSQL database using JDBC and provides the `JdbcTemplate` bean for executing SQL queries.
-
-- **Annotation `@Configuration`:** Indicates that this is the Spring configuration class.
-- **Annotation `@Value`:** Used to embed values from the properties file ('application.properties').
-- **The `dataSource()` method:** Creates and configures a data source (`DataSource') to connect to the database.
-- **The 'JdbcTemplate()` method:** Creates the 'JdbcTemplate` bean, which will be used to execute SQL queries.
-
-**Task:** Managing the connection to the PostgreSQL database and creating a 'JdbcTemplate` for working with SQL.
-
----
 
 ### `FoursquareConfig.java`
 
