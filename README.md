@@ -117,10 +117,11 @@ This file is responsible for initializing and registering the bot in the Telegra
 ---
 
 ### `DispatcherConfiguration.java`
-This file is a configuration class for Spring with the `dispatcher` profile:
+This file is a configuration class for Spring:
 - The annotation `@ComponentScan` indicates to Spring the need to scan packages to find components and beans.
+- The annotation `@PropertySource` declares an external properties file (app.properties) to be loaded into the Spring environment.
 
-**Task:** Defining the configuration for the `dispatcher` profile, allowing you to activate certain components only for this profile.
+**Task:** This class sets up the configuration for the Spring application by defining where Spring should scan for components and which properties file should be used for configuration values. It is used when registering a bot.
 
 ---
 
@@ -369,12 +370,11 @@ This class configures the HTTP client to work with the Foursquare API and provid
 
 ### `NodeConfiguration.java`
 
-This class is responsible for configuring components and repositories specific to the `node` profile.
+This file is a configuration class for Spring:
+- The annotation `@ComponentScan` indicates to Spring the need to scan packages to find components and beans.
+- The annotation `@PropertySource` declares an external properties file (app.properties) to be loaded into the Spring environment.
 
-- **Annotation `@ComponentScan`:** Scans packages to find Spring components.
-- **Annotation `@EnableR2dbcRepositories`:** Includes support for reactive repositories for working with the database via R2DBC.
-
-**Task:** Managing components and repositories specific to the `node` profile.
+**Task:** This class sets up the configuration for the Spring application by defining where Spring should scan for components and which properties file should be used for configuration values. It is used when registering a bot.
 
 ---
 
@@ -382,10 +382,10 @@ This class is responsible for configuring components and repositories specific t
 
 This class configures a reactive connection to a PostgreSQL database using R2DBC and manages transactions.
 
-- **Annotation `@EnableTransactionManagement`:** Enables transaction management.
+- **Annotation `@EnableR2dbcRepositories`:** is used to enable and configure the creation of reactive repositories based on Spring Data R2DBC.
 - **The `ConnectionFactory()` method:** Creates a reactive connection factory (`ConnectionFactory') for working with PostgreSQL via R2DBC.
 
-**Task:** Setting up a reactive connection to a PostgreSQL database with transaction support.
+**Task:** Setting up a reactive connection to a PostgreSQL database.
 
 ---
 
@@ -405,11 +405,9 @@ This class configures the password encryption mechanism using BCrypt.
 This class configures and runs the embedded Tomcat server.
 
 - **Annotation `@Configuration`:** Defines the class as a configuration class.
-- **Annotation `@ComponentScan`:** Scans packages to find Spring components.
-- **Annotation `@PropertySource`:** Loads configuration values from the 'appp.properties` file.
 - **The `tomcat()` method:** Configures and starts the Tomcat server on the specified port.
 
-**Task:** Configuring and running the built-in Tomcat server for the application to work.
+**Task:** Start the application on the specified port using the embedded Tomcat server.
 
 ---
 
@@ -417,65 +415,63 @@ This class configures and runs the embedded Tomcat server.
 
 ### Description of the work of the class `UserDao.java `:
 
-The `UserDao' class is a DAO (Data Access Object) that provides access to user data, preferences, allergies, and restaurant visits using reactive approaches and SQL queries via `R2dbcEntityTemplate` and `UserRepository'.
+The `UserDao` class is a Data Access Object (DAO) that provides reactive access to user data, preferences, allergies, and restaurant visits using R2DBC and repositories.
 
-### The main tasks of the class:
-- User management in the database (creation, search, deletion).
-- Manage user preferences and allergies.
-- Management of data on restaurant visits by users.
+### Main responsibilities:
+- Manage users in the database (create, search, delete).
+- Handle user preferences and allergies.
+- Manage user restaurant visit records.
 
 ### Fields:
-- **`R2dbcEntityTemplate r2dbcEntityTemplate`:** Used to execute SQL queries using the reactive API.
-- **`UserRepository userRepository`:** A repository for managing user data.
+- **`UserRepository userRepository`:** Repository for user data management.
+- **`PreferencesRepository preferencesRepository`:** Repository for managing user preferences.
+- **`AllergiesRepository allergiesRepository`:** Repository for managing user allergies.
+- **`VisitRepository visitRepository`:** Repository for managing user restaurant visits.
 
 ### Methods:
 
  **`saveUser(User user)`**
-   - Saves the new user in the database.
-   - Uses `UserRepository` to save the `User` object.
+   - Saves a new User entity in the database using the UserRepository.
 
- **`findUserByUsername(String username)`**
-- Searches for a user by username.
-   - Executes an SQL query for the search and converts the result into a 'User` object.
+**`findUserByUsername(String username)`**
+   - Retrieves a User by their username from the database.
 
- **`findUserByEmail(String email)`**
-   - Searches for a user by email.
-   - Executes an SQL query for the search and converts the result into a 'User` object.
+**`findUserByEmail(String email)`**
+   - Retrieves a User by their email from the database.
 
- **`getAllUserNames()`**
-- Returns a stream of names of all users.
-   - Executes an SQL query to get a list of all user names (username).
+**`getAllUserNames()`**
+   - Returns a stream of all usernames from the database.
 
- **`saveUserPreference(Long userId, String preference)`**
-- Saves the user's preference to the `user_preferences` table.
+**`saveUserPreference(Long userId, String preference)`**
+   - Saves a user's preference in the user_preferences table.
 
- **`findPreferencesByUserId(Long userId)`**
-   - Returns all user preferences by their ID.
-   - Executes an SQL query to search for all user preferences.
+**`findPreferencesByUserId(Long userId)`**
+   - Retrieves all preferences associated with a specific user ID.
 
- **`deleteUserPreference(Long userId, String preference)`**
-- Deletes the user's preference by ID and preference.
+**`deleteUserPreference(Long userId, String preference)`**
+   - Deletes a user's preference by user ID and preference name.
 
- **`saveUserAllergy(Long userId, String allergy)`**
-   - Saves the user's allergy to the `allergies` table.
+**`saveUserAllergy(Long userId, String allergy)`**
+   - Saves a user's allergy in the allergies table.
 
- **`findAllergiesByUserId(Long userId)`**
-   - Returns all the user's allergies by their ID.
+**`findAllergiesByUserId(Long userId)`**
+   - Retrieves all allergies associated with a specific user ID.
 
- **`deleteUserAllergy(Long userId, String allergy)`**
-    - Removes the user's allergy by his ID and the name of the allergy.
+**`deleteUserAllergy(Long userId, String allergy)`**
+   - Deletes a user's allergy by user ID and allergy name.
 
- **`saveVisit(Long userId, String restaurantId)`**
-    - Saves a record of the user's visit to the restaurant in the `visits` table, with the flag `visited = false'.
+**`saveVisit(Long userId, String restaurantId)`**
+   - Saves a user's restaurant visit in the visits table with `visited = false`.
 
- **`findVisitsByUserId(Long userId)`**
-    - Returns a list of the user's restaurant visits by their ID, including the restaurant ID and the visit status.
+**`findVisitsByUserId(Long userId)`**
+   - Retrieves all visits associated with a specific user ID, including restaurant ID and visit status.
 
- **`updateVisitStatus(Long userId, String restaurantId, boolean visited)`**
-    - Updates the restaurant visit status (true/false) for the user.
+**`updateVisitStatus(Long userId, String restaurantId, boolean visited)`**
+   - Updates the visited status of a restaurant visit for a user by their ID and restaurant ID.
 
- **`deleteVisit(Long userId, String restaurantId)`**
-    - Deletes the record of a restaurant visit for the user by his ID and restaurant ID.
+**`deleteVisit(Long userId, String restaurantId)`**
+   - Deletes a record of a restaurant visit for a user by their ID and restaurant ID.
+
 
 ### The main task:
 The `UserDao` class implements database access to manage users, their preferences, allergies, and restaurant visits. All operations are performed asynchronously using the reactive approach provided by Spring R2DBC.
@@ -491,14 +487,10 @@ These classes are entities that will be mapped to the corresponding tables in th
 ### `AcceptableAllergy.java`
 
 **Table:** `acceptable_allergies`  
-**Description:** Provides a list of acceptable (allowed) allergies that can be selected by users or added to the system.
 
 - **Fields:**
 - `id` is the unique identifier of the allergy.
   - `allergy' is the name of an allergy.
-
-- **Methods:**
-- Getters and setters for both fields.
 
 ---
 
@@ -512,22 +504,15 @@ These classes are entities that will be mapped to the corresponding tables in th
   - `userId` is the ID of the user who added the allergy.
   - `allergy' is the name of an allergy.
 
-- **Methods:**
-- Getters and setters for all fields.
-
 ---
 
 ### `AvailablePreference.java`
 
 **Table:** `available_preferences`  
-**Description:** Provides a list of available preferences that can be selected by users.
 
 - **Fields:**
 - `id` is the unique identifier of the preference.
   - `preference' is the name of the preference.
-
-- **Methods:**
-- Getters and setters for both fields.
 
 ---
 
@@ -541,13 +526,6 @@ This class represents the "preference" entity and is mapped to the `user_prefere
 - **`id`** is the unique identifier of the record (preferences). The field is annotated as `@Id`, which indicates that it is the primary key in the table.
 - **`userId`** is the ID of the user to whom this preference applies. This field indicates a connection with the user.
 - **`preference`** is the name of the preference. For example, it may be a category, type of product or service that the user is interested in.
-
-### Methods:
-
-- **Getters and setters:**
-- `getId()` / `setId(Long id)` — getting and setting the value for the `id` field.
-  - `getUserId()` / `setUserId(Long userId)` — getting and setting the value for the `userId` field.
-  - `getPreference()` / `setPreference(String preference)` — getting and setting the value for the `preference` field.
 
 ### The main task:
 
@@ -568,25 +546,19 @@ The `Preference` class is used to store and manage data about user preferences. 
 Is the default constructor for frameworks such as Spring.
   - A complete constructor for creating users with specified fields.
 
-- **Methods:**
-- Getters and setters for all fields.
-  - Redefined methods `toString()`, `equals()`, and `hashCode()` to work correctly with user objects.
-
 ---
 
 ###  `Visit.java`
 
 **Description:** Represents the user's visit to the restaurant.
 
-- **Fields:**
-- `restaurantId` is the unique identifier of the restaurant.
+- `id` — the unique identifier of the visit record (Long).
+  - `userId` — the unique identifier of the user (Long).
+  - `restaurantId` — the unique identifier of the restaurant (String).
   - `visited` — the status of the visit (Boolean value).
 
 - **Constructors:**
 - Constructor for initializing fields.
-
-- **Methods:**
-- Getters for the `restaurantId` and `visited` fields.
 
 ---
 
@@ -680,11 +652,9 @@ These classes manage logic related to users, preferences, allergies, sessions, a
 
 ###  `FoursquareService.java`
 
-**Task:** Interact with the Foursquare API to search for restaurants and get information about them.
+**Task:** Interact with the Foursquare API to search for restaurants.
 
 - **The `searchRestaurants()` method** — generates a query to the Foursquare API to search for restaurants according to the specified parameters (location, keywords, sorting, price, etc.).
-- **The `searchRandomRestaurant()` method** — executes a query to search for a random restaurant.
-- **The `getRestaurantLink()` method** — gets a link to a restaurant by its 'fsqId` via the Foursquare API.
 
 ---
 
@@ -713,70 +683,34 @@ These classes manage logic related to users, preferences, allergies, sessions, a
 
 **Task:** Manages user data, preferences, allergies, and restaurant visits. Interacts with repositories and services to process requests.
 
-- **Methods for working with users:**
-  - **`addUser()`** — adds a new user, checking the uniqueness of the email and username.
-  - **`authenticate()`** — verifies user authentication by username and password.
-  - **`getUserIdByUsername()`** — returns the user ID by name.
-  - **`getAllUsers()`** — returns a list of all users.
+- **Methods for managing users:**
+  - **`addUser()`** — adds a new user to the system.
+  - **`authenticate()`** — verifies the user's login credentials.
+  - **`getUserIdByUsername()`** — retrieves the user ID based on their username.
+  - **`getAllUsers()`** — retrieves the list of all usernames in the system.
 
-- **Methods for working with preferences:**
-- **`addUserPreference()`** — adds the user's preference, checking if it has already been added.
-  - **`getUserPreferences()`** — returns all user preferences.
-  - **`deleteUserPreference()`** — deletes the user's preference.
+- **Methods for managing preferences:**
+  - **`addUserPreference()`** — adds a preference for the user.
+  - **`getUserPreferences()`** — retrieves the list of user preferences.
+  - **`deleteUserPreference()`** — deletes a user's specific preference.
 
-- **Methods for dealing with allergies:**
-- **`addUserAllergy()`** — adds an allergy to the user, checking if it has already been added.
-  - **`getUserAllergies()`** — returns all the user's allergies.
-  - **`deleteUserAllergy()`** — removes the user's allergy.
-  - **`isAcceptableAllergy()`** — checks whether the allergy is acceptable (whether it is present in the `acceptable_allergies` table).
+- **Methods for managing allergies:**
+  - **`addUserAllergy()`** — adds an allergy for the user.
+  - **`getUserAllergies()`** — retrieves the list of user allergies.
+  - **`deleteUserAllergy()`** — deletes a specific allergy for the user.
 
-- **Methods for working with visits:**
-- **`addVisit()`** — adds a restaurant visit for the user.
+- **Methods for managing visits:**
+  - **`addVisit()`** — adds a restaurant visit for the user.
   - **`getVisitList()`** — returns the list of user visits.
   - **`markVisited()`** — marks the restaurant as visited.
   - **`removeVisit()`** — deletes the record of the restaurant visit.
 
-- **Methods for working with restaurants via the Foursquare API:**
-- **`findRestaurant()`** — searches for restaurants.
-  - **`requestRandomRestaurant()`** — searches for a random restaurant.
 
 ---
 
 ### The main task:
 Classes provide various services for working with users, preferences, allergies, restaurant visits, as well as interacting with external APIs.
 
----
-## Node/NodeApplication.java
-
-The 'NodeApplication` class is the entry point for launching a Spring application that uses several configuration classes to configure various components such as RabbitMQ, Tomcat, and a database. This class manually initializes the Spring context using the `AnnotationConfigApplicationContext'.
-
-### Basic elements:
-
- **`AnnotationConfigApplicationContext`**:
-- This class is used to create a Spring context based on Java configurations.
-   - Configuration classes are passed to the constructor arguments, which will be used to configure the application components.
-
-**Configuration classes:**
-- **`RabbitMQConfigg`** — configuration for RabbitMQ.
-   - **`RabbitConfigurationn`** — additional configuration for RabbitMQ.
-   - **`TomcatConfigg`** — configuration for the embedded Tomcat server.
-   - **`DatabaseConfig`** — configuration for connecting to a database using JDBC.
-   - **`ReactiveDatabaseConfig`** — a reactive configuration for connecting to a database using R2DBC.
-
- **Starting Tomcat**:
-- After initializing the context, the `TomcatConfigg` bin is extracted to make sure that the Tomcat server is properly configured and running.
-
-### Tasks:
-
-**Initializing the Spring context**:
-- The application uses several configuration classes to configure databases, RabbitMQ and the embedded Tomcat server.
-   - `AnnotationConfigApplicationContext` initializes all these classes and components in the Spring context.
-
- **Launching Tomcat**:
-   - In the last line, the `TomcatConfigg` bean is extracted, which indicates that the application runs the embedded Tomcat server if it has been configured correctly.
-
-### The main task:
-The 'NodeApplication` class launches the application by creating a Spring context and configuring key components such as RabbitMQ, database, and Tomcat server using Java configurations.
 
 ---
 
