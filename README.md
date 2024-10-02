@@ -32,6 +32,8 @@ Docker image of application - https://hub.docker.com/repository/docker/marg0sav/
 
 Also, if you pre-launch containers, the application can be launched through the Dispatcher Application class.
 
+:pizza::spaghetti::fried_shrimp: RestaurantBot link - https://t.me/you_want_food_use_Restaurant_bot :fried_shrimp::spaghetti::pizza:
+
 ---
 
 # Using example
