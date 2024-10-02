@@ -265,12 +265,6 @@ The parameterless constructor initializes an object with predefined values:
 ### Getters and setters:
 The `get` and `set` methods are implemented for each field, which allows you to get and change the values of search parameters.
 
-### The `toQueryString()` method:
-This method converts all parameters to a string in the format of a GET request. Example of a string:
-```
-query=some_query&near=City&open_now=true&sort=RELEVANCE&min_price=1&area=500.0&max_price=4&limit=5&categories=3&ll=45.0,90.0
-```
-The method makes it easy to generate a URL request with parameters for use in search queries over HTTP.
 
 ### The main task:
 The `SearchParameters` class helps you manage search parameters and provides the ability to quickly convert them to a string for use in GET requests to the API or other services.
