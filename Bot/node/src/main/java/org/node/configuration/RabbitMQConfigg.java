@@ -60,7 +60,7 @@ public class RabbitMQConfigg {
         return converter;
     }
 
-    @Bean
+    @Bean(name = "nodeRabbitListenerContainerFactory")
     public RabbitListenerContainerFactory<SimpleMessageListenerContainer> rabbitListenerContainerFactory(@Qualifier("nodeConnectionFactory") ConnectionFactory connectionFactory) {
         SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
         factory.setConnectionFactory(connectionFactory);

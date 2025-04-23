@@ -16,7 +16,7 @@ import static org.example.model.RabbitQueue.*;
 @Log4j2
 public class RabbitConfiguration {
 
-    @Bean
+    @Bean("dispatcherRabbitAdmin")
     public RabbitAdmin rabbitAdmin(@Qualifier("exampleConnectionFactory") ConnectionFactory connectionFactory) {
         return new RabbitAdmin(connectionFactory);
     }

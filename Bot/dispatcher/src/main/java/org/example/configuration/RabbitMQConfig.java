@@ -49,7 +49,7 @@ public class RabbitMQConfig {
         return template;
     }
 
-    @Bean
+    @Bean("dispatcherJsonMessageConverter")
     public MessageConverter jsonMessageConverter() {
         Jackson2JsonMessageConverter converter = new Jackson2JsonMessageConverter();
         DefaultJackson2JavaTypeMapper typeMapper = new DefaultJackson2JavaTypeMapper();

@@ -1,5 +1,7 @@
 package org.node.configuration;
 
+import io.r2dbc.postgresql.PostgresqlConnectionConfiguration;
+import io.r2dbc.postgresql.PostgresqlConnectionFactory;
 import io.r2dbc.spi.ConnectionFactories;
 import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.ConnectionFactoryOptions;
@@ -22,35 +24,41 @@ import org.springframework.r2dbc.core.binding.BindMarkersFactoryResolver;
 
 @Configuration
 @EnableR2dbcRepositories(basePackages = "org.node.repository")
-@Log4j2
 public class ReactiveDatabaseConfig extends AbstractR2dbcConfiguration {
 
-    @Value("${spring.r2dbc.url}")
-    private String url;
-
-    @Value("${spring.r2dbc.username}")
-    private String username;
-
-    @Value("${spring.r2dbc.password}")
-    private String password;
-
-    @Value("${spring.r2dbc.host}")
+    @Value("${spring.r2dbc.host:postgres-db}")
     private String host;
 
-    @Value("${spring.r2dbc.dbname}")
-    private String dbname;
+    @Value("${spring.r2dbc.port:5432}")
+    private int port;
 
-    @Override
+    @Value("${spring.r2dbc.username:userok}")
+    private String username;
+
+    @Value("${spring.r2dbc.password:12345}")
+    private String password;
+
+    @Value("${spring.r2dbc.database:postgres}")
+    private String database;
+
     @Bean
     public ConnectionFactory connectionFactory() {
-        log.info("Creating ConnectionFactory with URL: {}, Username: {}", url, username);
-        return ConnectionFactories.get(ConnectionFactoryOptions.builder()
-                .option(DRIVER, "postgresql")
-                .option(HOST, host)
-                .option(PORT, 5432)
-                .option(DATABASE, dbname)
-                .option(USER, username)
-                .option(PASSWORD, password)
-                .build());
+        PostgresqlConnectionConfiguration cfg = PostgresqlConnectionConfiguration.builder()
+                .host(host)
+                .port(port)
+                .username(username)
+                .password(password)
+                .database(database)
+                .build();
+        return new PostgresqlConnectionFactory(cfg);
+    }
+
+    /**
+     * Этот метод и даёт Spring Data R2DBC понять,
+     * что мы работаем с PostgreSQL.
+     */
+    @Override
+    public R2dbcDialect getDialect(ConnectionFactory connectionFactory) {
+        return PostgresDialect.INSTANCE;
     }
 }

@@ -6,16 +6,17 @@ import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 @Configuration
 public class RabbitConfigurationn {
-    @Bean
+    @Bean("nodeJsonMessageConverter")
     public MessageConverter jsonMessageConverter() {
         return new Jackson2JsonMessageConverter();
     }
 
-    @Bean
-    public RabbitAdmin rabbitAdmin(ConnectionFactory connectionFactory) {
-        return new RabbitAdmin(connectionFactory);
+    @Bean("nodeRabbitAdmin")
+    public RabbitAdmin rabbitAdmin(@Qualifier("nodeConnectionFactory")ConnectionFactory cf) {
+        return new RabbitAdmin(cf);
     }
 }

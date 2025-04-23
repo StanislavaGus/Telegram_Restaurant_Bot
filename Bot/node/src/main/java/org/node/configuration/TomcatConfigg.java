@@ -1,21 +1,21 @@
-package org.node.configuration;
-
-import org.apache.catalina.startup.Tomcat;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.*;
-
-@Configuration
-public class TomcatConfigg {
-
-    @Value("${server.port}")
-    private int serverPort;
-
-    @Bean
-    public Tomcat tomcat() throws Exception {
-        Tomcat tomcat = new Tomcat();
-        tomcat.setPort(serverPort);
-        tomcat.getConnector(); // Это необходимо для инициализации Tomcat
-        tomcat.start();
-        return tomcat;
-    }
-}
+//package org.node.configuration;
+//
+//import org.apache.catalina.startup.Tomcat;
+//import org.springframework.beans.factory.annotation.Value;
+//import org.springframework.context.annotation.*;
+//
+//@Configuration
+//public class TomcatConfigg {
+//
+//    @Value("${server.port}")
+//    private int serverPort;
+//
+//    @Bean(name = "nodeTomcat")
+//    public Tomcat tomcat() throws Exception {
+//        Tomcat tomcat = new Tomcat();
+//        tomcat.setPort(serverPort);
+//        tomcat.getConnector(); // Это необходимо для инициализации Tomcat
+//        tomcat.start();
+//        return tomcat;
+//    }
+//}

@@ -2,6 +2,7 @@ package org.example.configuration;
 
 import org.example.services.Bot;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
@@ -13,23 +14,16 @@ import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
 @Component
 public class BotInitialization {
-    private final AnnotationConfigApplicationContext context;
+    private final Bot bot;
 
     @Autowired
-    public BotInitialization(AnnotationConfigApplicationContext context){
-        this.context = context;
+    public BotInitialization(Bot bot) {
+        this.bot = bot;
     }
 
-    @EventListener({ContextRefreshedEvent.class})
-    public void init() throws TelegramApiException {
-        Bot bot = context.getBean(Bot.class);
-        TelegramBotsApi telegramBotsApi = new TelegramBotsApi(DefaultBotSession.class);
-
-        try {
-            telegramBotsApi.registerBot(bot);
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
-        }
-
+    @EventListener(ContextRefreshedEvent.class)
+    public void startBot() throws TelegramApiException {
+        TelegramBotsApi api = new TelegramBotsApi(DefaultBotSession.class);
+        api.registerBot(bot);
     }
 }

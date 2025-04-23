@@ -26,7 +26,7 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.Keyboard
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import reactor.core.publisher.Mono;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 import java.util.*;
 
 @Component
@@ -106,6 +106,8 @@ public class Bot extends TelegramLongPollingBot {
         if (update.hasMessage()) {
             String messageText = update.getMessage().getText();
             long chatId = update.getMessage().getChatId();
+
+            log.info("recived message {} from {} ", messageText, chatId);
 
             if (update.getMessage().hasText() || update.getMessage().hasLocation()) {
                 if (update.hasMessage() && update.getMessage().hasLocation()) {

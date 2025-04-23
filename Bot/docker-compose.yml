@@ -16,6 +16,12 @@ services:
         condition: service_healthy
     networks:
       - my_network
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=userok
+      - SPRING_RABBITMQ_PASSWORD=p@ssw0rd
 
 
   postgres-db:
@@ -28,7 +34,7 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "5433:5432"
     networks:
       - my_network
     healthcheck:
@@ -39,7 +45,7 @@ services:
 
   rabbitmq:
     image: rabbitmq:3-management
-    container_name: my_rabbitmq
+    container_name: rabbitmq
     ports:
       - "5672:5672"
       - "15672:15672"
