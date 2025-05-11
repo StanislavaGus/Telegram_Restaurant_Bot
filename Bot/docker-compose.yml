@@ -5,7 +5,7 @@ networks:
 
 services:
   dispatcher-app:
-    build: .
+    image: marg0sav/restaurantbot:latest
     container_name: dispatcher-app
     ports:
       - "8088:8088"
